@@ -607,16 +607,47 @@
                 gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。`;
             }
 
-            // 品类
-            let categoryRows = '';
+            // 品类分析（报告用表格格式）
+            let categoryReportRows = '';
             if (data.categories) {
-                data.categories.forEach(cat => {
+                data.categories.forEach((cat) => {
                     if (cat.actual > 0) {
                         const pct = data.actualSales > 0 ? (cat.actual / data.actualSales * 100).toFixed(1) : 0;
                         const catAchievement = cat.target > 0 ? (cat.actual / cat.target * 100).toFixed(1) : '—';
-                        categoryRows += `<p><strong>${cat.name}：</strong>实际${formatMoney(cat.actual)} | 占比${pct}% | 达成率${catAchievement}%</p>`;
+                        categoryReportRows += `
+                            <tr>
+                                <td style="text-align:left;font-weight:600;">${cat.name}</td>
+                                <td>${formatMoney(cat.actual)}</td>
+                                <td>${pct}%</td>
+                                <td>${cat.target > 0 ? formatMoney(cat.target) : '—'}</td>
+                                <td>${catAchievement}%</td>
+                            </tr>
+                        `;
                     }
                 });
+            }
+
+            // 报告品类HTML
+            let categoryHtml = '';
+            if (categoryReportRows) {
+                categoryHtml = `
+                    <table class="data-table" style="margin-bottom:12px;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left;">品类</th>
+                                <th>实际</th>
+                                <th>占比</th>
+                                <th>目标</th>
+                                <th>达成率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${categoryReportRows}
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                categoryHtml = '<p>（未提供品类数据）</p>';
             }
 
             // 根源（包括自定义的）
@@ -700,7 +731,7 @@
 
                 <div class="section">
                     <div class="section-title">🍰 品类结构</div>
-                    ${categoryRows || '<p>（未提供品类数据）</p>'}
+                    ${categoryHtml}
                 </div>
 
                 <div class="section">
