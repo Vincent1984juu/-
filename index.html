@@ -316,12 +316,12 @@
 
         <!-- ========== 报告预览区 ========== -->
         <div id="previewSection">
-            <div class="btn-group no-print" style="margin-bottom: 16px;">
+            <div id="previewContent" class="preview-content"></div>
+            <div class="btn-group no-print" style="margin-top: 16px;">
                 <button class="btn btn-primary" onclick="copyReport()">📋 复制报告</button>
                 <button class="btn btn-secondary" onclick="printReport()">🖨️ 打印</button>
                 <button class="btn btn-secondary" onclick="saveAsImage()">📷 截图</button>
             </div>
-            <div id="previewContent" class="preview-content"></div>
         </div>
     </div>
 
@@ -385,6 +385,9 @@
                 mainIssue = '未达标';
                 gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。达成率${achievement.toFixed(1)}%，需要分析具体原因并制定改进计划。`;
             }
+
+            // 保存到全局变量，供报告使用
+            window._aiGapDesc = gapDesc;
 
             // 品类分析
             let categoryRows = '';
@@ -594,18 +597,20 @@
             const customersGap = data.targetCustomers > 0 ? (data.actualCustomers - data.targetCustomers) : 0;
             const avgPriceGap = data.targetAvgPrice > 0 ? (data.actualAvgPrice - data.targetAvgPrice) : 0;
 
-            // 核心差距描述
-            let gapDesc = '';
-            if (achievement >= 100) {
-                gapDesc = `本月营业额已达标（达成率${achievement}%），但仍有提升空间。`;
-            } else if (customersMom < 0 && avgPriceMom < 0) {
-                gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。客单数和客单价双双下降。`;
-            } else if (customersMom < 0) {
-                gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。主要问题是客单数不足。`;
-            } else if (avgPriceMom < 0) {
-                gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。主要问题是客单价偏低。`;
-            } else {
-                gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。`;
+            // 核心差距描述（直接引用第一部分AI生成的）
+            let gapDesc = window._aiGapDesc || '';
+            if (!gapDesc) {
+                if (achievement >= 100) {
+                    gapDesc = `本月营业额已达标（达成率${achievement}%），但仍有提升空间。`;
+                } else if (customersMom < 0 && avgPriceMom < 0) {
+                    gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。客单数和客单价双双下降，是业绩下滑的核心原因。建议从"增加曝光率"和"提升客单价"两个方向入手。`;
+                } else if (customersMom < 0) {
+                    gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。主要问题是客单数不足（缺口${Math.abs(customersGap)}人），说明路上客流进店或成交环节有问题。建议重点检查曝光率和转化率。`;
+                } else if (avgPriceMom < 0) {
+                    gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。主要问题是客单价偏低（缺口${Math.abs(avgPriceGap).toFixed(2)}元），说明顾客买得少或买得便宜。建议重点检查选品策略、陈列优化和二次推荐。`;
+                } else {
+                    gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。`;
+                }
             }
 
             // 品类分析（报告用表格格式）
