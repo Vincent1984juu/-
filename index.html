@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>聚满分 · 营业额AI分析工具</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -37,34 +36,39 @@
             font-weight: 600; margin-bottom: 12px;
         }
 
-        .calc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .calc-item {
-            background: white; border-radius: 8px; padding: 14px; text-align: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.04); border: 1px solid #e8f0fe;
+        .gap-alert {
+            background: #fff8e1; border: 1px solid #ffc107; border-radius: 8px;
+            padding: 16px; margin: 16px 0; font-size: 14px;
         }
-        .calc-item .calc-value { font-size: 22px; font-weight: 700; color: #003CA5; }
-        .calc-item .calc-value.negative { color: #e53935; }
-        .calc-item .calc-value.positive { color: #43a047; }
-        .calc-item .calc-label { font-size: 12px; color: #666; margin-top: 4px; }
+        .gap-alert strong { color: #f57c00; }
 
-        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .chart-container { position: relative; height: 280px; margin: 16px 0; }
-        @media (max-width: 768px) { .chart-grid { grid-template-columns: 1fr; } }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+        .data-table th, .data-table td { padding: 10px 8px; text-align: center; border: 1px solid #e0e0e0; }
+        .data-table th { background: #f0f7ff; color: #003CA5; font-weight: 600; }
+        .data-table td { background: white; }
+        .data-table .gap-negative { color: #e53935; font-weight: 600; }
+        .data-table .gap-positive { color: #43a047; font-weight: 600; }
+        .data-table .cell-highlight { background: #fff8e1; }
 
-        .data-summary {
-            background: linear-gradient(135deg, #e8f0ff 0%, #f0f7ff 100%);
-            border-radius: 10px; padding: 16px; margin-top: 12px;
+        .summary-box {
+            background: #f5f7fa; border-radius: 8px; padding: 16px; margin-top: 16px;
+            font-size: 14px; line-height: 2;
         }
-        .data-summary p { margin: 6px 0; font-size: 14px; }
-        .data-summary .highlight { font-weight: 600; color: #003CA5; }
-        .data-summary .negative { color: #e53935; }
-        .data-summary .positive { color: #43a047; }
+        .summary-box .key-point {
+            color: #e53935; font-weight: 600;
+        }
+        .summary-box .opportunity {
+            color: #43a047; font-weight: 600;
+        }
 
         .root-cause-section { margin-bottom: 20px; }
         .root-cause-category {
             background: #f0f7ff; border-left: 4px solid #003CA5;
             padding: 12px 16px; margin-bottom: 10px; font-weight: 600; color: #003CA5;
             border-radius: 0 8px 8px 0;
+        }
+        .root-cause-subtitle {
+            font-weight: 600; color: #333; margin: 10px 0 8px 16px; font-size: 14px;
         }
         .root-cause-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding-left: 16px; }
         .root-cause-option {
@@ -76,6 +80,17 @@
         .root-cause-option.selected { border-color: #003CA5; background: #e8f0fe; }
         .root-cause-option .check-icon { width: 18px; height: 18px; border-radius: 4px; border: 2px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; color: transparent; transition: all 0.2s; flex-shrink: 0; }
         .root-cause-option.selected .check-icon { background: #003CA5; border-color: #003CA5; color: white; }
+        .root-cause-option .editable-text { flex: 1; outline: none; }
+        .root-cause-option .editable-text:focus { background: #fff8e1; padding: 2px 4px; border-radius: 4px; }
+
+        .add-root-btn {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 6px 12px; background: #e8f0fe; color: #003CA5;
+            border: 1px dashed #003CA5; border-radius: 6px;
+            font-size: 12px; cursor: pointer; margin: 8px 0 8px 16px;
+            transition: all 0.2s;
+        }
+        .add-root-btn:hover { background: #d0e0fc; }
 
         .action-plan-item {
             background: white; border: 1.5px solid #e0e0e0; border-radius: 10px;
@@ -118,6 +133,14 @@
         .diagnosis-option:hover { border-color: #003CA5; }
         .diagnosis-option.selected { border-color: #003CA5; background: #e8f0fe; color: #003CA5; font-weight: 600; }
 
+        .call-to-action {
+            background: linear-gradient(135deg, #e8f0ff 0%, #f0f7ff 100%);
+            border: 2px solid #003CA5; border-radius: 10px;
+            padding: 20px; margin-top: 20px; text-align: center;
+        }
+        .call-to-action p { font-size: 15px; color: #003CA5; font-weight: 600; margin-bottom: 8px; }
+        .call-to-action .sub { font-size: 13px; color: #666; font-weight: normal; }
+
         #previewSection { display: none; margin-top: 24px; }
         #previewSection.active { display: block; }
         .preview-content { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
@@ -125,15 +148,12 @@
         .preview-content .section { margin-bottom: 20px; }
         .preview-content .section-title { font-weight: 700; font-size: 16px; color: #003CA5; margin-bottom: 10px; padding-bottom: 6px; }
 
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
-        .data-table th, .data-table td { padding: 10px 8px; text-align: center; border: 1px solid #e0e0e0; }
-        .data-table th { background: #f0f7ff; color: #003CA5; font-weight: 600; }
-        .data-table td { background: white; }
-
         @media print { .no-print { display: none !important; } body { background: white; } }
         @media (max-width: 640px) {
-            .calc-grid, .root-cause-options, .diagnosis-options { grid-template-columns: 1fr; }
+            .root-cause-options, .diagnosis-options { grid-template-columns: 1fr; }
             .action-plan-body { grid-template-columns: 1fr; }
+            .data-table { font-size: 11px; }
+            .data-table th, .data-table td { padding: 6px 4px; }
         }
     </style>
 </head>
@@ -179,92 +199,101 @@
 
         <div class="card">
             <div class="card-title">🎯 根源分析</div>
-            <p style="font-size:13px;color:#666;margin-bottom:16px;">按"营业额=客单价×客单数"框架分类。点击选择符合本门店情况的根源（可多选）：</p>
+            <p style="font-size:13px;color:#666;margin-bottom:16px;">按"营业额=客单价×客单数"框架分类。点击选择符合本门店情况的根源（可多选），双击文字可编辑：</p>
 
-            <div class="root-cause-section">
+            <div class="root-cause-section" id="section1">
                 <div class="root-cause-category">一、提升客单数（路上客流→进店客流→成交）</div>
-                <div style="font-weight:600;color:#333;margin:10px 0 8px 16px;font-size:14px;">1. 增加曝光率</div>
-                <div class="root-cause-options">
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>门面不整洁、灯光暗、有遮挡</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>门口试吃未常态化或品质差</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>门口宣传海报未及时正确展示</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>门口录音未及时正确播放</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>朋友圈未每天发或内容质量差</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>周边社区/写字楼未拓展</div>
+                <div class="root-cause-subtitle">1. 增加曝光率</div>
+                <div class="root-cause-options" id="rc1-1">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">门面不整洁、灯光暗、有遮挡</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">门口试吃未常态化或品质差</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">门口宣传海报未及时正确展示</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">门口录音未及时正确播放</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">朋友圈未每天发或内容质量差</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">周边社区/写字楼未拓展</span></div>
                 </div>
-                <div style="font-weight:600;color:#333;margin:10px 0 8px 16px;font-size:14px;">2. 提高转化率</div>
-                <div class="root-cause-options">
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>顾客进门无主动招呼/试吃</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>高峰期排队长、收银慢</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>卖场/产品/员工仪容不整洁</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>促销活动未宣传或员工未告知</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>陈列不饱满、C位未放主推品</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>产品卖相差、吸引力不足</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>引流品，利润品没有合理搭配</div>
+                <button class="add-root-btn" onclick="addRootCause('rc1-1')">+ 添加根源</button>
+
+                <div class="root-cause-subtitle">2. 提高转化率</div>
+                <div class="root-cause-options" id="rc1-2">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">顾客进门无主动招呼/试吃</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">高峰期排队长、收银慢</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">卖场/产品/员工仪容不整洁</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">促销活动未宣传或员工未告知</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">陈列不饱满、C位未放主推品</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">产品卖相差、吸引力不足</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">引流品、利润品没有合理搭配</span></div>
                 </div>
-                <div style="font-weight:600;color:#333;margin:10px 0 8px 16px;font-size:14px;">3. 增加消费场景</div>
-                <div class="root-cause-options">
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>早餐场景未推套餐/产品不足</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>未针对放学/下班时段备货</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>节日/特殊场景未提前备货主推</div>
+                <button class="add-root-btn" onclick="addRootCause('rc1-2')">+ 添加根源</button>
+
+                <div class="root-cause-subtitle">3. 增加消费场景</div>
+                <div class="root-cause-options" id="rc1-3">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">早餐场景未推套餐/产品不足</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">未针对放学/下班时段备货</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">节日/特殊场景未提前备货主推</span></div>
                 </div>
+                <button class="add-root-btn" onclick="addRootCause('rc1-3')">+ 添加根源</button>
             </div>
 
-            <div class="root-cause-section">
+            <div class="root-cause-section" id="section2">
                 <div class="root-cause-category">二、提升客单价（让顾客买更多、买更贵）</div>
-                <div style="font-weight:600;color:#333;margin:10px 0 8px 16px;font-size:14px;">4. 选品策略</div>
-                <div class="root-cause-options">
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>高单价/高毛利产品未放C位</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>产品未匹配季节需求</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>未按周边客群调整选品</div>
+                <div class="root-cause-subtitle">4. 选品策略</div>
+                <div class="root-cause-options" id="rc2-1">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">高单价/高毛利产品未放C位</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">产品未匹配季节需求</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">未按周边客群调整选品</span></div>
                 </div>
-                <div style="font-weight:600;color:#333;margin:10px 0 8px 16px;font-size:14px;">5. 陈列优化</div>
-                <div class="root-cause-options">
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>高单价产品未放黄金位置</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>未设礼盒/套餐推荐区</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>搭配产品未放关联位置</div>
+                <button class="add-root-btn" onclick="addRootCause('rc2-1')">+ 添加根源</button>
+
+                <div class="root-cause-subtitle">5. 陈列优化</div>
+                <div class="root-cause-options" id="rc2-2">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">高单价产品未放黄金位置</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">未设礼盒/套餐推荐区</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">搭配产品未放关联位置</span></div>
                 </div>
-                <div style="font-weight:600;color:#333;margin:10px 0 8px 16px;font-size:14px;">6. 二次推荐（连带销售）</div>
-                <div class="root-cause-options">
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>收银时未推荐加购</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>热酥出炉未主动推荐</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>未推饮品搭配</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>员工无标准推荐话术</div>
+                <button class="add-root-btn" onclick="addRootCause('rc2-2')">+ 添加根源</button>
+
+                <div class="root-cause-subtitle">6. 二次推荐（连带销售）</div>
+                <div class="root-cause-options" id="rc2-3">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">收银时未推荐加购</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">热酥出炉未主动推荐</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">未推饮品搭配</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">员工无标准推荐话术</span></div>
                 </div>
-                <div style="font-weight:600;color:#333;margin:10px 0 8px 16px;font-size:14px;">7. 活动设计</div>
-                <div class="root-cause-options">
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>未设置有效的引流或提升单价的活动</div>
+                <button class="add-root-btn" onclick="addRootCause('rc2-3')">+ 添加根源</button>
+
+                <div class="root-cause-subtitle">7. 活动设计</div>
+                <div class="root-cause-options" id="rc2-4">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">未设置有效的引流或提升单价的活动</span></div>
                 </div>
+                <button class="add-root-btn" onclick="addRootCause('rc2-4')">+ 添加根源</button>
             </div>
 
-            <div class="root-cause-section">
+            <div class="root-cause-section" id="section3">
                 <div class="root-cause-category">三、提升复购率（让顾客再来）</div>
-                <div class="root-cause-options">
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>产品鲜度差、超时未下架</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>生日蛋糕客户未回访</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>客诉处理不及时</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>未发券唤醒沉睡客户</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>未建立顾客社群</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>储值活动没有执行到位</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>高峰期出品不及时，陈列不够饱满</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>服务态度不够友善快捷</div>
+                <div class="root-cause-options" id="rc3-1">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">产品鲜度差、超时未下架</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">生日蛋糕客户未回访</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">客诉处理不及时</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">未发券唤醒沉睡客户</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">未建立顾客社群</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">储值活动没有执行到位</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">高峰期出品不及时，陈列不够饱满</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">服务态度不够友善快捷</span></div>
                 </div>
+                <button class="add-root-btn" onclick="addRootCause('rc3-1')">+ 添加根源</button>
             </div>
 
-            <div class="root-cause-section">
+            <div class="root-cause-section" id="section4">
                 <div class="root-cause-category">四、基础管理动作（支撑以上所有）</div>
-                <div class="root-cause-options">
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>本月缺乏工作重心，没有明确业绩提升核心动作</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>没有针对月重点事项，制定明确的目标、计划、复盘</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>没有和团队共识目标、计划，并合理分配工作</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>团队不稳定，人手不足，或安排不合理</div>
-                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>对团队激励不足，团队士气不足</div>
+                <div class="root-cause-options" id="rc4-1">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">本月缺乏工作重心，没有明确业绩提升核心动作</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">没有针对月重点事项，制定明确的目标、计划、复盘</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">没有和团队共识目标、计划，并合理分配工作</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">团队不稳定，人手不足，或安排不合理</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">对团队激励不足，团队士气不足</span></div>
                 </div>
-            </div>
-
-            <div class="form-group" style="margin-top:16px;">
-                <label>其他根源（补充说明）</label>
-                <textarea id="otherRootCauses" placeholder="如有其他根源，请补充..." style="min-height:80px;"></textarea>
+                <button class="add-root-btn" onclick="addRootCause('rc4-1')">+ 添加根源</button>
             </div>
         </div>
 
@@ -318,33 +347,7 @@
 
     <script>
         // ========== 数据配置区（AI将在这里注入数据） ==========
-        window.__AI_DATA__ = {"storeName": "万民城店", "region": "孙红梅区", "month": "2026-05", "targetSales": 500000, "actualSales": 470148, "lastMonthSales": 450000, "lastYearSales": 420000, "targetCustomers": 20000, "actualCustomers": 18421, "lastMonthCustomers": 18000, "lastYearCustomers": 0, "targetAvgPrice": 26, "actualAvgPrice": 25.52, "lastMonthAvgPrice": 25, "lastYearAvgPrice": 0, "categories": [{"name": "现烤面包", "actual": 131342, "target": 0, "lastMonth": 0}, {"name": "包装产品", "actual": 85076, "target": 0, "lastMonth": 0}, {"name": "热酥", "actual": 33763, "target": 0, "lastMonth": 0}, {"name": "蛋糕", "actual": 86758, "target": 0, "lastMonth": 0}, {"name": "甜品", "actual": 86059, "target": 0, "lastMonth": 0}]}; // AI将通过外部脚本填充此数据
-
-        // 示例数据格式（参考）：
-        // {
-        //     "storeName": "万民城店",
-        //     "region": "孙红梅区",
-        //     "month": "2026-05",
-        //     "targetSales": 500000,
-        //     "actualSales": 470148,
-        //     "lastMonthSales": 450000,
-        //     "lastYearSales": 420000,
-        //     "targetCustomers": 20000,
-        //     "actualCustomers": 18421,
-        //     "lastMonthCustomers": 18000,
-        //     "lastYearCustomers": 0,
-        //     "targetAvgPrice": 26,
-        //     "actualAvgPrice": 25.52,
-        //     "lastMonthAvgPrice": 25,
-        //     "lastYearAvgPrice": 0,
-        //     "categories": [
-        //         {"name": "现烤面包", "actual": 131342, "target": 140000, "lastMonth": 125000},
-        //         {"name": "包装产品", "actual": 85076, "target": 90000, "lastMonth": 82000},
-        //         {"name": "热酥", "actual": 33763, "target": 35000, "lastMonth": 32000},
-        //         {"name": "蛋糕", "actual": 86758, "target": 90000, "lastMonth": 85000},
-        //         {"name": "甜品", "actual": 86059, "target": 90000, "lastMonth": 80000}
-        //     ]
-        // }
+        window.__AI_DATA__ = null; // AI将通过外部脚本填充此数据
 
         // 如果没有AI数据，显示等待提示
         // 如果有AI数据，自动渲染分析
@@ -352,8 +355,6 @@
         let selectedDiagnosis = '';
         let selectedRootCauses = [];
         let actionItemCount = 0;
-        let barChartInstance = null;
-        let pieChartInstance = null;
 
         function calcChange(current, previous) {
             if (!previous || previous == 0) return null;
@@ -363,6 +364,10 @@
         function formatPct(val) {
             if (val === null) return '—';
             return (val > 0 ? '+' : '') + val.toFixed(1) + '%';
+        }
+
+        function formatMoney(val) {
+            return '¥' + val.toLocaleString();
         }
 
         function renderAIAnalysis(data) {
@@ -378,132 +383,156 @@
             const customersMom = calcChange(data.actualCustomers, data.lastMonthCustomers);
             const avgPriceMom = calcChange(data.actualAvgPrice, data.lastMonthAvgPrice);
             const gap = data.targetSales > 0 ? (data.actualSales - data.targetSales) : 0;
+            const customersGap = data.targetCustomers > 0 ? (data.actualCustomers - data.targetCustomers) : 0;
+            const avgPriceGap = data.targetAvgPrice > 0 ? (data.actualAvgPrice - data.targetAvgPrice) : 0;
 
-            // 品类占比
-            let categoryHtml = '';
-            let pieData = [];
-            let pieLabels = [];
-            let pieColors = ['#003CA5', '#EB6517', '#43a047', '#7c4dff', '#ff5722'];
+            // 判断主要问题
+            let mainIssue = '';
+            let gapDesc = '';
+            if (achievement >= 100) {
+                mainIssue = '已达标';
+                gapDesc = `本月营业额已达标（达成率${achievement.toFixed(1)}%），但仍有提升空间。建议重点关注机会点，寻找突破方向。`;
+            } else if (customersMom < 0 && avgPriceMom < 0) {
+                mainIssue = '双降';
+                gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。客单数和客单价双双下降，是业绩下滑的核心原因。建议从"增加曝光率"和"提升客单价"两个方向入手。`;
+            } else if (customersMom < 0 || (customersGap < 0 && data.targetCustomers > 0)) {
+                mainIssue = '客单数下降';
+                gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。主要问题是客单数不足（缺口${Math.abs(customersGap)}人），说明路上客流进店或成交环节有问题。建议重点检查曝光率和转化率。`;
+            } else if (avgPriceMom < 0 || (avgPriceGap < 0 && data.targetAvgPrice > 0)) {
+                mainIssue = '客单价下降';
+                gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。主要问题是客单价偏低（缺口${Math.abs(avgPriceGap).toFixed(2)}元），说明顾客买得少或买得便宜。建议重点检查选品策略、陈列优化和二次推荐。`;
+            } else {
+                mainIssue = '未达标';
+                gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。达成率${achievement.toFixed(1)}%，需要分析具体原因并制定改进计划。`;
+            }
+
+            // 品类分析
+            let categoryRows = '';
+            let categorySummary = [];
             if (data.categories) {
-                data.categories.forEach((cat, idx) => {
+                data.categories.forEach((cat) => {
                     if (cat.actual > 0) {
                         const pct = data.actualSales > 0 ? (cat.actual / data.actualSales * 100).toFixed(1) : 0;
                         const catAchievement = cat.target > 0 ? (cat.actual / cat.target * 100).toFixed(1) : '—';
                         const mom = calcChange(cat.actual, cat.lastMonth);
-                        categoryHtml += `
-                            <p><strong>${cat.name}：</strong>¥${cat.actual.toLocaleString()} | 占比${pct}% | 达成率${catAchievement}% | 环比${formatPct(mom)}</p>
+                        const momClass = mom !== null ? (mom >= 0 ? 'gap-positive' : 'gap-negative') : '';
+                        const momText = formatPct(mom);
+                        const achClass = cat.target > 0 ? (cat.actual >= cat.target ? 'gap-positive' : 'gap-negative') : '';
+                        
+                        categoryRows += `
+                            <tr>
+                                <td style="text-align:left;font-weight:600;">${cat.name}</td>
+                                <td>${formatMoney(cat.actual)}</td>
+                                <td>${pct}%</td>
+                                <td>${cat.target > 0 ? formatMoney(cat.target) : '—'}</td>
+                                <td class="${achClass}">${catAchievement}%</td>
+                                <td class="${momClass}">${momText}</td>
+                            </tr>
                         `;
-                        pieData.push(cat.actual);
-                        pieLabels.push(cat.name);
+                        
+                        if (mom !== null && mom < 0) {
+                            categorySummary.push(`${cat.name}环比下降${Math.abs(mom).toFixed(1)}%`);
+                        }
                     }
                 });
             }
 
+            // 构建分析HTML
             container.innerHTML = `
-                <div class="data-summary">
-                    <p><span class="highlight">门店：</span>${data.storeName || '______'} | <span class="highlight">区域：</span>${data.region || '______'} | <span class="highlight">月份：</span>${data.month || '______'}</p>
-                    <p><span class="highlight">月营业额实际：</span>¥${data.actualSales.toLocaleString()} | <span class="highlight">目标：</span>¥${data.targetSales.toLocaleString()} | <span class="highlight">达成率：</span><span class="${achievement >= 100 ? 'positive' : 'negative'}">${achievement.toFixed(1)}%</span></p>
-                    <p><span class="highlight">环比：</span><span class="${salesMom >= 0 ? 'positive' : 'negative'}">${formatPct(salesMom)}</span> | <span class="highlight">同比：</span><span class="${salesYoy >= 0 ? 'positive' : 'negative'}">${formatPct(salesYoy)}</span></p>
-                    <p><span class="highlight">来客数：</span>${data.actualCustomers.toLocaleString()} | 环比：<span class="${customersMom >= 0 ? 'positive' : 'negative'}">${formatPct(customersMom)}</span></p>
-                    <p><span class="highlight">客单价：</span>¥${data.actualAvgPrice.toFixed(2)} | 环比：<span class="${avgPriceMom >= 0 ? 'positive' : 'negative'}">${formatPct(avgPriceMom)}</span></p>
-                    <p><span class="highlight">与目标差额：</span><span class="${gap >= 0 ? 'positive' : 'negative'}">${gap >= 0 ? '+' : ''}¥${Math.abs(gap).toLocaleString()}</span></p>
+                <div style="margin-bottom:16px;">
+                    <p style="font-size:14px;color:#666;"><strong>门店：</strong>${data.storeName || '______'} | <strong>区域：</strong>${data.region || '______'} | <strong>月份：</strong>${data.month || '______'}</p>
                 </div>
 
-                <div class="calc-grid" style="margin-top:16px;">
-                    <div class="calc-item">
-                        <div class="calc-value ${achievement >= 100 ? 'positive' : 'negative'}">${achievement.toFixed(1)}%</div>
-                        <div class="calc-label">目标达成率</div>
-                    </div>
-                    <div class="calc-item">
-                        <div class="calc-value ${salesMom >= 0 ? 'positive' : 'negative'}">${formatPct(salesMom)}</div>
-                        <div class="calc-label">营业额环比</div>
-                    </div>
-                    <div class="calc-item">
-                        <div class="calc-value ${salesYoy >= 0 ? 'positive' : 'negative'}">${formatPct(salesYoy)}</div>
-                        <div class="calc-label">营业额同比</div>
-                    </div>
-                    <div class="calc-item">
-                        <div class="calc-value ${customersMom >= 0 ? 'positive' : 'negative'}">${formatPct(customersMom)}</div>
-                        <div class="calc-label">来客数环比</div>
-                    </div>
-                    <div class="calc-item">
-                        <div class="calc-value ${avgPriceMom >= 0 ? 'positive' : 'negative'}">${formatPct(avgPriceMom)}</div>
-                        <div class="calc-label">客单价环比</div>
-                    </div>
-                    <div class="calc-item">
-                        <div class="calc-value ${gap >= 0 ? 'positive' : 'negative'}">${gap >= 0 ? '+' : ''}¥${Math.abs(gap).toLocaleString()}</div>
-                        <div class="calc-label">与目标差额</div>
-                    </div>
+                <div class="gap-alert">
+                    <strong>💡 核心差距：</strong>${gapDesc}
                 </div>
 
-                <div style="margin-top:16px;">
-                    <div style="font-weight:600;color:#003CA5;margin-bottom:8px;">🍰 品类销售结构</div>
-                    ${categoryHtml || '<p style="color:#999;">（未提供品类数据）</p>'}
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>指标</th>
+                            <th>实际</th>
+                            <th>目标</th>
+                            <th>达成率</th>
+                            <th>差额</th>
+                            <th>环比</th>
+                            <th>同比</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="font-weight:600;">营业额</td>
+                            <td>${formatMoney(data.actualSales)}</td>
+                            <td>${data.targetSales > 0 ? formatMoney(data.targetSales) : '—'}</td>
+                            <td class="${achievement >= 100 ? 'gap-positive' : 'gap-negative'}">${achievement.toFixed(1)}%</td>
+                            <td class="${gap >= 0 ? 'gap-positive' : 'gap-negative'}">${gap >= 0 ? '+' : ''}${formatMoney(gap)}</td>
+                            <td class="${salesMom >= 0 ? 'gap-positive' : 'gap-negative'}">${formatPct(salesMom)}</td>
+                            <td class="${salesYoy >= 0 ? 'gap-positive' : 'gap-negative'}">${formatPct(salesYoy)}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:600;">来客数</td>
+                            <td>${data.actualCustomers.toLocaleString()}</td>
+                            <td>${data.targetCustomers > 0 ? data.targetCustomers.toLocaleString() : '—'}</td>
+                            <td class="${data.targetCustomers > 0 ? (data.actualCustomers >= data.targetCustomers ? 'gap-positive' : 'gap-negative') : ''}">${data.targetCustomers > 0 ? (data.actualCustomers / data.targetCustomers * 100).toFixed(1) + '%' : '—'}</td>
+                            <td class="${customersGap >= 0 ? 'gap-positive' : 'gap-negative'}">${customersGap >= 0 ? '+' : ''}${customersGap.toLocaleString()}</td>
+                            <td class="${customersMom >= 0 ? 'gap-positive' : 'gap-negative'}">${formatPct(customersMom)}</td>
+                            <td>—</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:600;">客单价</td>
+                            <td>¥${data.actualAvgPrice.toFixed(2)}</td>
+                            <td>${data.targetAvgPrice > 0 ? '¥' + data.targetAvgPrice.toFixed(2) : '—'}</td>
+                            <td class="${data.targetAvgPrice > 0 ? (data.actualAvgPrice >= data.targetAvgPrice ? 'gap-positive' : 'gap-negative') : ''}">${data.targetAvgPrice > 0 ? (data.actualAvgPrice / data.targetAvgPrice * 100).toFixed(1) + '%' : '—'}</td>
+                            <td class="${avgPriceGap >= 0 ? 'gap-positive' : 'gap-negative'}">${avgPriceGap >= 0 ? '+' : ''}¥${avgPriceGap.toFixed(2)}</td>
+                            <td class="${avgPriceMom >= 0 ? 'gap-positive' : 'gap-negative'}">${formatPct(avgPriceMom)}</td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="margin-top:20px;">
+                    <div style="font-weight:600;color:#003CA5;margin-bottom:12px;font-size:15px;">🍰 品类销售结构</div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left;">品类</th>
+                                <th>实际</th>
+                                <th>占比</th>
+                                <th>目标</th>
+                                <th>达成率</th>
+                                <th>环比</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${categoryRows || '<tr><td colspan="6" style="color:#999;">（未提供品类数据）</td></tr>'}
+                        </tbody>
+                    </table>
                 </div>
 
-                <div class="chart-grid" style="margin-top:16px;">
-                    <div class="card" style="margin-bottom:0;">
-                        <div style="font-size:14px;font-weight:600;color:#003CA5;margin-bottom:8px;">目标 vs 实际对比</div>
-                        <div class="chart-container" style="height:220px;"><canvas id="barChart"></canvas></div>
-                    </div>
-                    <div class="card" style="margin-bottom:0;">
-                        <div style="font-size:14px;font-weight:600;color:#003CA5;margin-bottom:8px;">品类销售占比</div>
-                        <div class="chart-container" style="height:220px;"><canvas id="pieChart"></canvas></div>
-                    </div>
+                <div class="call-to-action">
+                    <p>🎯 请根据以上数据差距，开始分析根源</p>
+                    <div class="sub">向下滚动，选择问题诊断类型，勾选根源，制定行动计划</div>
                 </div>
             `;
 
-            // 渲染图表
-            setTimeout(() => {
-                renderBarChart(data);
-                if (pieData.length > 0) {
-                    renderPieChart(pieLabels, pieData, pieColors);
-                }
-            }, 100);
-        }
-
-        function renderBarChart(data) {
-            const ctx = document.getElementById('barChart');
-            if (!ctx) return;
-            if (barChartInstance) barChartInstance.destroy();
-
-            barChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['营业额', '来客数', '客单价'],
-                    datasets: [
-                        { label: '实际', data: [data.actualSales, data.actualCustomers, data.actualAvgPrice], backgroundColor: '#003CA5', borderRadius: 6 },
-                        { label: '目标', data: [data.targetSales, data.targetCustomers, data.targetAvgPrice], backgroundColor: '#90caf9', borderRadius: 6 }
-                    ]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'top' } },
-                    scales: { y: { beginAtZero: true } }
-                }
-            });
-        }
-
-        function renderPieChart(labels, data, colors) {
-            const ctx = document.getElementById('pieChart');
-            if (!ctx) return;
-            if (pieChartInstance) pieChartInstance.destroy();
-
-            pieChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: colors.slice(0, data.length),
-                        borderWidth: 2, borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'right' } }
-                }
-            });
+            // 自动推荐诊断类型
+            if (mainIssue === '双降') {
+                document.querySelectorAll('.diagnosis-option').forEach(o => {
+                    if (o.dataset.value === '双降') selectDiagnosis(o);
+                });
+            } else if (mainIssue === '客单数下降') {
+                document.querySelectorAll('.diagnosis-option').forEach(o => {
+                    if (o.dataset.value === '客单数下降') selectDiagnosis(o);
+                });
+            } else if (mainIssue === '客单价下降') {
+                document.querySelectorAll('.diagnosis-option').forEach(o => {
+                    if (o.dataset.value === '客单价下降') selectDiagnosis(o);
+                });
+            } else if (mainIssue === '已达标') {
+                document.querySelectorAll('.diagnosis-option').forEach(o => {
+                    if (o.dataset.value === '达标但想提升') selectDiagnosis(o);
+                });
+            }
         }
 
         // 检查是否有AI数据
@@ -525,13 +554,25 @@
         }
 
         function toggleRootCause(el) {
+            // 如果点击的是editable-text区域，不切换选中状态（让用户编辑）
+            if (event.target.classList.contains('editable-text')) return;
+            
             el.classList.toggle('selected');
-            const text = el.textContent.replace('✓', '').trim();
+            const text = el.querySelector('.editable-text').textContent.trim();
             if (el.classList.contains('selected')) {
                 if (!selectedRootCauses.includes(text)) selectedRootCauses.push(text);
             } else {
                 selectedRootCauses = selectedRootCauses.filter(r => r !== text);
             }
+        }
+
+        function addRootCause(containerId) {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = 'root-cause-option';
+            div.onclick = function(e) { toggleRootCause(this); };
+            div.innerHTML = '<span class="check-icon">✓</span><span class="editable-text" contenteditable="true">点击编辑根源描述</span>';
+            container.appendChild(div);
         }
 
         // ========== 行动计划 ==========
@@ -570,25 +611,39 @@
             const customersMom = formatPct(calcChange(data.actualCustomers, data.lastMonthCustomers));
             const avgPriceMom = formatPct(calcChange(data.actualAvgPrice, data.lastMonthAvgPrice));
             const gap = data.targetSales > 0 ? (data.actualSales - data.targetSales) : 0;
+            const customersGap = data.targetCustomers > 0 ? (data.actualCustomers - data.targetCustomers) : 0;
+            const avgPriceGap = data.targetAvgPrice > 0 ? (data.actualAvgPrice - data.targetAvgPrice) : 0;
+
+            // 核心差距描述
+            let gapDesc = '';
+            if (achievement >= 100) {
+                gapDesc = `本月营业额已达标（达成率${achievement}%），但仍有提升空间。`;
+            } else if (customersMom < 0 && avgPriceMom < 0) {
+                gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。客单数和客单价双双下降。`;
+            } else if (customersMom < 0) {
+                gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。主要问题是客单数不足。`;
+            } else if (avgPriceMom < 0) {
+                gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。主要问题是客单价偏低。`;
+            } else {
+                gapDesc = `本月营业额未达标，缺口${formatMoney(Math.abs(gap))}。`;
+            }
 
             // 品类
-            let categoryHtml = '';
+            let categoryRows = '';
             if (data.categories) {
                 data.categories.forEach(cat => {
                     if (cat.actual > 0) {
                         const pct = data.actualSales > 0 ? (cat.actual / data.actualSales * 100).toFixed(1) : 0;
                         const catAchievement = cat.target > 0 ? (cat.actual / cat.target * 100).toFixed(1) : '—';
-                        categoryHtml += `<p><strong>${cat.name}：</strong>实际¥${cat.actual.toLocaleString()} | 占比${pct}% | 达成率${catAchievement}%</p>`;
+                        categoryRows += `<p><strong>${cat.name}：</strong>实际${formatMoney(cat.actual)} | 占比${pct}% | 达成率${catAchievement}%</p>`;
                     }
                 });
             }
 
-            // 根源
+            // 根源（包括自定义的）
             let rootCausesHtml = selectedRootCauses.length > 0
                 ? selectedRootCauses.map(r => `• ${r}`).join('<br>')
                 : '（未选择根源）';
-            const otherRoot = document.getElementById('otherRootCauses').value;
-            if (otherRoot) rootCausesHtml += '<br>• 其他：' + otherRoot;
 
             // 行动计划
             let actionsHtml = '';
@@ -625,16 +680,21 @@
 
                 <div class="section">
                     <div class="section-title">📊 数据总览</div>
-                    <p><strong>月营业额：</strong>¥${data.actualSales.toLocaleString()} | 目标：¥${data.targetSales.toLocaleString()} | 达成率：${achievement}%</p>
+                    <p><strong>月营业额：</strong>${formatMoney(data.actualSales)} | 目标：${formatMoney(data.targetSales)} | 达成率：${achievement}%</p>
                     <p><strong>环比：</strong>${salesMom} | <strong>同比：</strong>${salesYoy}</p>
                     <p><strong>来客数：</strong>${data.actualCustomers.toLocaleString()} | 环比：${customersMom}</p>
                     <p><strong>客单价：</strong>¥${data.actualAvgPrice.toFixed(2)} | 环比：${avgPriceMom}</p>
-                    <p><strong>与目标差额：</strong>${gap >= 0 ? '+' : ''}¥${Math.abs(gap).toLocaleString()}</p>
+                    <p><strong>与目标差额：</strong>${gap >= 0 ? '+' : ''}${formatMoney(gap)}</p>
                 </div>
 
                 <div class="section">
                     <div class="section-title">🍰 品类结构</div>
-                    ${categoryHtml || '<p>（未提供品类数据）</p>'}
+                    ${categoryRows || '<p>（未提供品类数据）</p>'}
+                </div>
+
+                <div class="section">
+                    <div class="section-title">🔍 核心差距</div>
+                    <p>${gapDesc}</p>
                 </div>
 
                 <div class="section">
