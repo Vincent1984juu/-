@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>聚满分 · 节假日作战计划</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+:root { --brand-blue: #003CA5; --brand-orange: #EB6517; --bg-gray: #f5f7fa; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; background: var(--bg-gray); color: #333; line-height: 1.6; }
+.container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+
+.header {
+    text-align: center; padding: 30px 0;
+    background: linear-gradient(135deg, var(--brand-blue) 0%, #0055cc 100%);
+    color: white; border-radius: 12px; margin-bottom: 24px;
+    box-shadow: 0 4px 15px rgba(0,60,165,0.3);
+}
+.header h1 { font-size: 26px; margin-bottom: 8px; }
+.header p { opacity: 0.9; font-size: 14px; }
+
+.card {
+    background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.card-title {
+    font-size: 18px; font-weight: 700; color: var(--brand-blue);
+    margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #e8f0fe;
+}
+
+.browser-tip {
+    background: #fff3e0; border: 2px solid #ff9800; border-radius: 12px;
+    padding: 16px 20px; margin-bottom: 20px; text-align: center;
+    font-size: 15px; color: #e65100; font-weight: 600;
+    box-shadow: 0 2px 8px rgba(255,152,0,0.2); position: relative;
+}
+.browser-tip-close {
+    display: inline-block; margin-top: 10px; padding: 6px 20px;
+    background: #ff9800; color: white; border: none; border-radius: 6px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+}
+
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-weight: 600; color: var(--brand-blue); margin-bottom: 6px; font-size: 14px; }
+.form-group input, .form-group textarea, .form-group select {
+    width: 100%; padding: 10px 12px; border: 1.5px solid #e0e0e0; border-radius: 8px;
+    font-size: 14px; transition: border-color 0.2s;
+}
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+    border-color: var(--brand-blue); outline: none;
+}
+
+.goal-card {
+    background: linear-gradient(135deg, var(--brand-orange) 0%, #ff7b35 100%);
+    color: white; padding: 24px; border-radius: 12px; margin-bottom: 20px;
+}
+.goal-card .label { font-size: 14px; opacity: 0.9; }
+.goal-card input {
+    background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
+    color: white; font-size: 20px; font-weight: 700; padding: 8px 12px;
+    border-radius: 8px; width: 100%; margin-top: 4px;
+}
+.goal-card input::placeholder { color: rgba(255,255,255,0.7); }
+
+.staff-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.staff-card {
+    background: #f8f9fa; border-radius: 10px; padding: 16px;
+    border-left: 4px solid var(--brand-blue);
+}
+.staff-card h4 { color: var(--brand-blue); font-size: 14px; margin-bottom: 10px; }
+.staff-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.staff-row input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+
+.btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 12px 24px; border-radius: 8px; font-size: 15px;
+    font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
+}
+.btn-primary { background: var(--brand-blue); color: white; }
+.btn-primary:hover { background: #002d7a; }
+.btn-orange { background: var(--brand-orange); color: white; }
+.btn-orange:hover { background: #d45513; }
+.btn-success { background: #27ae60; color: white; }
+
+.preview-section { display: none; margin-top: 24px; }
+.preview-section.active { display: block; }
+
+.report-content { background: white; border-radius: 12px; padding: 24px; }
+.report-module { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #eee; }
+.report-module:last-child { border-bottom: none; }
+.report-module h3 {
+    font-size: 20px; color: var(--brand-blue); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+}
+.report-module p, .report-module li { font-size: 15px; line-height: 1.8; }
+
+.gap-alert {
+    background: #fff3e0; border-left: 4px solid var(--brand-orange);
+    padding: 16px; border-radius: 0 8px 8px 0; margin: 12px 0;
+}
+
+.action-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+
+#syncToast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: #4caf50; color: white; padding: 14px 28px; border-radius: 10px;
+    z-index: 9999; font-size: 15px; font-weight: 600;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2); transition: opacity 0.3s; opacity: 0;
+}
+
+@media (max-width: 768px) {
+    .staff-grid { grid-template-columns: 1fr; }
+    .container { padding: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🎯 聚满分 · 节假日作战计划</h1>
+        <p>AI已完成基础框架，请你继续完善人员、产品、活动内容</p>
+    </div>
+
+    <div class="browser-tip" id="browserTip">
+        <span style="font-size:24px;display:block;margin-bottom:8px;">📢</span>
+        <div style="line-height:1.6;">
+            如在微信/钉钉内打开，请点击右上角<span style="color:#ff5722;font-size:18px;">【⋯】</span><br>
+            选择「在浏览器打开」，体验更佳
+        </div>
+        <button class="browser-tip-close" onclick="document.getElementById('browserTip').style.display='none'">知道了</button>
+    </div>
+
+    <!-- ========== 第一部分：基础信息 ========== -->
+    <div class="card">
+        <div class="card-title">🎯 基础信息</div>
+        <div class="form-group">
+            <label>门店名称</label>
+            <input type="text" id="storeName" placeholder="如：南村店">
+        </div>
+        <div class="form-group">
+            <label>节日名称</label>
+            <input type="text" id="holidayName" placeholder="如：母亲节">
+        </div>
+        <div class="form-group">
+            <label>作战日期</label>
+            <input type="text" id="holidayDate" placeholder="如：5月12日">
+        </div>
+        <div class="goal-card">
+            <div class="label">营业额目标（元）</div>
+            <input type="number" id="targetAmount" placeholder="输入目标金额">
+            <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:200px;">
+                    <div class="label">去年营业额（元）</div>
+                    <input type="number" id="lastYearAmount" placeholder="输入去年营业额">
+                </div>
+                <div style="flex:1;min-width:200px;">
+                    <div class="label">目标同比提升（%）</div>
+                    <input type="number" id="growthRate" placeholder="如：8">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 第二部分：主推产品 ========== -->
+    <div class="card">
+        <div class="card-title">🍰 主推3款产品</div>
+        <div id="productContainer">
+            <div class="staff-row" style="margin-bottom:12px;">
+                <input type="text" class="product-name" placeholder="产品名称" style="flex:2;">
+                <input type="number" class="product-qty" placeholder="目标个数" style="flex:1;">
+            </div>
+            <div class="staff-row" style="margin-bottom:12px;">
+                <input type="text" class="product-name" placeholder="产品名称" style="flex:2;">
+                <input type="number" class="product-qty" placeholder="目标个数" style="flex:1;">
+            </div>
+            <div class="staff-row" style="margin-bottom:12px;">
+                <input type="text" class="product-name" placeholder="产品名称" style="flex:2;">
+                <input type="number" class="product-qty" placeholder="目标个数" style="flex:1;">
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 第三部分：人员排班 ========== -->
+    <div class="card">
+        <div class="card-title">👥 人员排班</div>
+        
+        <div class="staff-card" style="margin-bottom:12px;">
+            <h4>前场 - 早班</h4>
+            <div class="staff-row">
+                <input type="text" id="frontAmTime" placeholder="时间，如：6:00-14:00" style="flex:1;">
+            </div>
+            <div id="frontAmStaff">
+                <div class="staff-row">
+                    <input type="text" class="staff-name" placeholder="姓名">
+                    <input type="text" class="staff-role" placeholder="职责">
+                </div>
+            </div>
+            <button class="btn btn-primary" style="padding:6px 12px;font-size:13px;" onclick="addStaffRow('frontAmStaff')">+ 添加人员</button>
+        </div>
+
+        <div class="staff-card" style="margin-bottom:12px;">
+            <h4>前场 - 晚班</h4>
+            <div class="staff-row">
+                <input type="text" id="frontPmTime" placeholder="时间，如：14:00-22:00" style="flex:1;">
+            </div>
+            <div id="frontPmStaff">
+                <div class="staff-row">
+                    <input type="text" class="staff-name" placeholder="姓名">
+                    <input type="text" class="staff-role" placeholder="职责">
+                </div>
+            </div>
+            <button class="btn btn-primary" style="padding:6px 12px;font-size:13px;" onclick="addStaffRow('frontPmStaff')">+ 添加人员</button>
+        </div>
+
+        <div class="staff-card" style="margin-bottom:12px;">
+            <h4>后厨 - 早班</h4>
+            <div id="kitchenAmStaff">
+                <div class="staff-row">
+                    <input type="text" class="staff-name" placeholder="姓名">
+                    <input type="text" class="staff-role" placeholder="职责">
+                </div>
+            </div>
+            <button class="btn btn-primary" style="padding:6px 12px;font-size:13px;" onclick="addStaffRow('kitchenAmStaff')">+ 添加人员</button>
+        </div>
+
+        <div class="staff-card" style="margin-bottom:12px;">
+            <h4>后厨 - 晚班</h4>
+            <div id="kitchenPmStaff">
+                <div class="staff-row">
+                    <input type="text" class="staff-name" placeholder="姓名">
+                    <input type="text" class="staff-role" placeholder="职责">
+                </div>
+            </div>
+            <button class="btn btn-primary" style="padding:6px 12px;font-size:13px;" onclick="addStaffRow('kitchenPmStaff')">+ 添加人员</button>
+        </div>
+
+        <div class="staff-card" style="margin-bottom:12px;">
+            <h4>裱花房</h4>
+            <div class="staff-row">
+                <input type="text" id="flowerStartTime" placeholder="开工时间，如：6:00" style="flex:1;">
+            </div>
+            <div id="flowerStaff">
+                <div class="staff-row">
+                    <input type="text" class="staff-name" placeholder="姓名">
+                    <input type="text" class="staff-role" placeholder="职责">
+                </div>
+            </div>
+            <button class="btn btn-primary" style="padding:6px 12px;font-size:13px;" onclick="addStaffRow('flowerStaff')">+ 添加人员</button>
+            <div class="staff-row" style="margin-top:10px;">
+                <label style="font-size:13px;color:#666;">临时工：</label>
+                <select id="tempWorker" style="width:auto;padding:6px 12px;">
+                    <option value="无">无</option>
+                    <option value="有">有</option>
+                </select>
+                <input type="text" id="tempWorkerDetail" placeholder="临时工安排说明" style="flex:1;display:none;">
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 第四部分：活动内容 ========== -->
+    <div class="card">
+        <div class="card-title">📱 活动内容与预热宣传</div>
+        <div class="form-group">
+            <label>活动内容</label>
+            <textarea id="activityContent" rows="3" placeholder="如：储值200送20+蛋糕88折"></textarea>
+        </div>
+        <div class="form-group">
+            <label>朋友圈预热（门店）</label>
+            <input type="text" id="wechatStore" placeholder="提前X天，每天X条">
+        </div>
+        <div class="form-group">
+            <label>朋友圈预热（全员）</label>
+            <input type="text" id="wechatAll" placeholder="X号完成，每人发X次">
+        </div>
+        <div class="form-group">
+            <label>私信顾客</label>
+            <input type="text" id="privateMsg" placeholder="X号完成，覆盖X位顾客">
+        </div>
+        <div class="form-group">
+            <label>抖音/视频号</label>
+            <input type="text" id="douyin" placeholder="提前X天，每天X条">
+        </div>
+    </div>
+
+    <!-- ========== 第五部分：往年踩坑 ========== -->
+    <div class="card">
+        <div class="card-title">⚠️ 往年踩过什么坑？</div>
+        <div class="form-group">
+            <textarea id="pastIssues" rows="3" placeholder="如：去年裱花房爆单，取蛋糕排队..."></textarea>
+        </div>
+    </div>
+
+    <!-- ========== 生成报告按钮 ========== -->
+    <div style="text-align:center;margin:32px 0;">
+        <button class="btn btn-orange" style="padding:16px 48px;font-size:18px;" onclick="generateReport()">
+            【生成完整作战计划】
+        </button>
+    </div>
+
+    <!-- ========== 报告预览 ========== -->
+    <div class="preview-section" id="previewSection">
+        <div class="report-content" id="reportContent"></div>
+        <div class="action-btns">
+            <button class="btn btn-primary" onclick="copyReport()">📋 复制报告</button>
+            <button class="btn btn-success" onclick="saveAsImage()">📸 保存截图</button>
+            <button class="btn btn-orange" onclick="syncToDingTalk()">【📤 同步到钉钉表格】</button>
+        </div>
+    </div>
+</div>
+
+<div id="syncToast"></div>
+
+<script>
+// ========== 数据注入点（AI生成时替换）==========
+window.__HOLIDAY_DATA__ = {"storeName":"小北店","region":"孙红梅区","holidayName":"母亲节","holidayDate":"5月12日"};
+
+// ========== 工具函数 ==========
+function formatMoney(n) {
+    if (!n || isNaN(n)) return '______';
+    return '¥' + parseFloat(n).toLocaleString('zh-CN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+}
+
+function addStaffRow(containerId) {
+    const container = document.getElementById(containerId);
+    const div = document.createElement('div');
+    div.className = 'staff-row';
+    div.innerHTML = '<input type="text" class="staff-name" placeholder="姓名"><input type="text" class="staff-role" placeholder="职责"><button onclick="this.parentElement.remove()" style="background:#ffebee;color:#c62828;border:none;border-radius:4px;padding:4px 8px;font-size:12px;cursor:pointer;">删除</button>';
+    container.appendChild(div);
+}
+
+// 临时工显示/隐藏
+document.getElementById('tempWorker').addEventListener('change', function() {
+    document.getElementById('tempWorkerDetail').style.display = this.value === '有' ? 'block' : 'none';
+});
+
+// ========== 生成报告 ==========
+function generateReport() {
+    const storeName = document.getElementById('storeName').value || '______';
+    const holidayName = document.getElementById('holidayName').value || '______';
+    const holidayDate = document.getElementById('holidayDate').value || '______';
+    const targetAmount = document.getElementById('targetAmount').value || '';
+    const lastYearAmount = document.getElementById('lastYearAmount').value || '';
+    const growthRate = document.getElementById('growthRate').value || '';
+
+    // 收集产品
+    const products = [];
+    document.querySelectorAll('#productContainer .staff-row').forEach(row => {
+        const name = row.querySelector('.product-name').value;
+        const qty = row.querySelector('.product-qty').value;
+        if (name) products.push({name, qty});
+    });
+
+    // 收集人员
+    function collectStaff(containerId) {
+        const staff = [];
+        document.querySelectorAll('#' + containerId + ' .staff-row').forEach(row => {
+            const name = row.querySelector('.staff-name')?.value;
+            const role = row.querySelector('.staff-role')?.value;
+            if (name) staff.push({name, role});
+        });
+        return staff;
+    }
+
+    const frontAm = collectStaff('frontAmStaff');
+    const frontPm = collectStaff('frontPmStaff');
+    const kitchenAm = collectStaff('kitchenAmStaff');
+    const kitchenPm = collectStaff('kitchenPmStaff');
+    const flower = collectStaff('flowerStaff');
+
+    const activityContent = document.getElementById('activityContent').value;
+    const wechatStore = document.getElementById('wechatStore').value;
+    const wechatAll = document.getElementById('wechatAll').value;
+    const privateMsg = document.getElementById('privateMsg').value;
+    const douyin = document.getElementById('douyin').value;
+    const pastIssues = document.getElementById('pastIssues').value;
+
+    // 生成报告HTML
+    let reportHtml = `
+        <h2 style="text-align:center;color:#003CA5;margin-bottom:24px;">${storeName} · ${holidayName} 作战计划</h2>
+        
+        <div class="report-module">
+            <h3>🎯 基础信息</h3>
+            <p><strong>门店：</strong>${storeName}</p>
+            <p><strong>节日：</strong>${holidayName}</p>
+            <p><strong>日期：</strong>${holidayDate}</p>
+            <div class="gap-alert">
+                <p><strong>营业额目标：</strong>${formatMoney(targetAmount)}</p>
+                ${lastYearAmount ? `<p><strong>去年营业额：</strong>${formatMoney(lastYearAmount)}</p>` : ''}
+                ${growthRate ? `<p><strong>目标同比提升：</strong>${growthRate}%</p>` : ''}
+            </div>
+        </div>
+
+        <div class="report-module">
+            <h3>🍰 主推产品</h3>
+            ${products.length > 0 ? products.map((p, i) => `<p>${i+1}. <strong>${p.name}</strong>：目标 <strong>${p.qty}</strong> 个</p>`).join('') : '<p>（未填写产品）</p>'}
+        </div>
+
+        <div class="report-module">
+            <h3>👥 人员排班</h3>
+            <p><strong>前场早班</strong>（${document.getElementById('frontAmTime').value || '______'}）</p>
+            ${frontAm.length > 0 ? frontAm.map(s => `<p>• ${s.name}：${s.role}</p>`).join('') : '<p>（未填写）</p>'}
+            
+            <p><strong>前场晚班</strong>（${document.getElementById('frontPmTime').value || '______'}）</p>
+            ${frontPm.length > 0 ? frontPm.map(s => `<p>• ${s.name}：${s.role}</p>`).join('') : '<p>（未填写）</p>'}
+            
+            <p><strong>后厨早班</strong></p>
+            ${kitchenAm.length > 0 ? kitchenAm.map(s => `<p>• ${s.name}：${s.role}</p>`).join('') : '<p>（未填写）</p>'}
+            
+            <p><strong>后厨晚班</strong></p>
+            ${kitchenPm.length > 0 ? kitchenPm.map(s => `<p>• ${s.name}：${s.role}</p>`).join('') : '<p>（未填写）</p>'}
+            
+            <p><strong>裱花房</strong>（开工 ${document.getElementById('flowerStartTime').value || '______'}）</p>
+            ${flower.length > 0 ? flower.map(s => `<p>• ${s.name}：${s.role}</p>`).join('') : '<p>（未填写）</p>'}
+            <p>临时工：${document.getElementById('tempWorker').value}${document.getElementById('tempWorkerDetail').value ? '（' + document.getElementById('tempWorkerDetail').value + '）' : ''}</p>
+        </div>
+
+        <div class="report-module">
+            <h3>📱 活动内容与预热</h3>
+            ${activityContent ? `<p><strong>活动内容：</strong>${activityContent}</p>` : ''}
+            ${wechatStore ? `<p><strong>朋友圈（门店）：</strong>${wechatStore}</p>` : ''}
+            ${wechatAll ? `<p><strong>朋友圈（全员）：</strong>${wechatAll}</p>` : ''}
+            ${privateMsg ? `<p><strong>私信顾客：</strong>${privateMsg}</p>` : ''}
+            ${douyin ? `<p><strong>抖音/视频号：</strong>${douyin}</p>` : ''}
+        </div>
+
+        <div class="report-module">
+            <h3>⚠️ 往年踩坑记录</h3>
+            <p>${pastIssues || '（未填写）'}</p>
+        </div>
+
+        <div class="report-module">
+            <h3>⚔️ 前场作战事项（SOP）</h3>
+            <p>1. 订蛋糕问"最晚几点拿"，写时间段，错开高峰</p>
+            <p>2. 优先推现卖，不推4寸迷你</p>
+            <p>3. 主推产品直接压摆卖单，不加字不丢单</p>
+            <p>4. 收银主动提醒会员优惠券，引导储值</p>
+            <p>5. 取蛋糕对单号+备注，白单红单放篮子</p>
+            <p>6. 送货单：黑色大头笔写大字，提前1小时发给跑腿</p>
+        </div>
+
+        <div class="report-module">
+            <h3>🔥 后厨作战事项（SOP）</h3>
+            <p>1. T-1提前烤好主推产品</p>
+            <p>2. 早班主攻烤制，晚班主攻出品</p>
+            <p>3. 晚班11点后安排1人协助蛋糕房</p>
+            <p>4. 高峰时段增加现烤包出炉频率</p>
+            <p>5. 晚班高峰期拿蛋糕时段，仔细核对订单</p>
+        </div>
+
+        <div class="report-module">
+            <h3>🎂 裱花作战事项（SOP）</h3>
+            <p>1. 提前烤好蛋糕胚，水果备够中午用量</p>
+            <p>2. 插件盘点，辅料对数</p>
+            <p>3. 蛋糕柜温度正常，不定时检查</p>
+            <p>4. 物料到位：胶纸/刀叉/礼盒装框</p>
+            <p>5. 送货蛋糕易掉落的围胶边保护</p>
+        </div>
+
+        <div class="report-module">
+            <h3>🚨 突发预案</h3>
+            <p>1. 花房超产能→店长立即沟通延单/停订</p>
+            <p>2. 取蛋糕排队→前台提醒"拿单或拍照"</p>
+            <p>3. 裱花房爆单→外场提前电联客人沟通延迟</p>
+            <p>4. 外卖爆单→及时上下架，避免超卖</p>
+            <p>5. 物料不够→T-1晚三遍检查</p>
+            <p>6. 人员缺岗→机动人员顶位</p>
+            <p>7. 蛋糕柜温度异常→半成品放2楼空调直吹</p>
+        </div>
+
+        <div class="report-module" style="background:linear-gradient(135deg,#003CA5,#0055cc);color:white;padding:20px;border-radius:12px;">
+            <h3 style="color:#ffd700;">💡 店长口诀</h3>
+            <p><strong>三提前：</strong>提前预热、提前备货、提前排班</p>
+            <p><strong>三紧盯：</strong>紧盯出品、紧盯订单、紧盯客情</p>
+            <p><strong>三错开：</strong>取货时间错开高峰、订单压力错开时段、人员高峰错开休息</p>
+            <p><strong>一核心：</strong>当天出品不断、服务不乱、客诉不升</p>
+        </div>
+    `;
+
+    document.getElementById('reportContent').innerHTML = reportHtml;
+
+    // 保存到URL
+    const reportData = {
+        storeName, holidayName, holidayDate, targetAmount, lastYearAmount, growthRate,
+        products, frontAm, frontPm, kitchenAm, kitchenPm, flower,
+        frontAmTime: document.getElementById('frontAmTime').value,
+        frontPmTime: document.getElementById('frontPmTime').value,
+        flowerStartTime: document.getElementById('flowerStartTime').value,
+        tempWorker: document.getElementById('tempWorker').value,
+        tempWorkerDetail: document.getElementById('tempWorkerDetail').value,
+        activityContent, wechatStore, wechatAll, privateMsg, douyin, pastIssues
+    };
+
+    try {
+        const jsonStr = JSON.stringify(reportData);
+        const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
+        window.location.hash = 'data=' + base64;
+    } catch(e) { console.log('URL保存失败:', e); }
+
+    document.getElementById('previewSection').classList.add('active');
+    setTimeout(() => {
+        document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+}
+
+function copyReport() {
+    const text = document.getElementById('reportContent').innerText;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => alert('报告已复制！'));
+    } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('报告已复制！');
+    }
+}
+
+function saveAsImage() {
+    const el = document.getElementById('reportContent');
+    html2canvas(el, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = document.getElementById('storeName').value + '_作战计划.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        alert('截图已保存！');
+    }).catch(err => alert('截图失败：' + err.message));
+}
+
+function syncToDingTalk() {
+    const fullUrl = window.location.href;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(fullUrl).then(() => {
+            showSyncHint('✅ 完整报告链接已复制！请返回【满分学院AI助教】发送此链接，AI助手会自动同步到钉钉表格。');
+        });
+    } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = fullUrl;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showSyncHint('✅ 完整报告链接已复制！请返回【满分学院AI助教】发送此链接，AI助手会自动同步到钉钉表格。');
+    }
+}
+
+function showSyncHint(message) {
+    let toast = document.getElementById('syncToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'syncToast';
+        toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#4caf50;color:white;padding:14px 28px;border-radius:10px;z-index:9999;font-size:15px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,0.2);transition:opacity 0.3s;opacity:0;';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.style.opacity = '1';
+    setTimeout(() => { toast.style.opacity = '0'; }, 4000);
+    setTimeout(() => { toast.style.display = 'none'; }, 4300);
+}
+
+// 页面加载时恢复数据
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const hash = window.location.hash;
+        if (hash && hash.startsWith('#data=')) {
+            const base64 = hash.replace('#data=', '');
+            const jsonStr = decodeURIComponent(escape(atob(base64)));
+            const data = JSON.parse(jsonStr);
+            
+            // 填充基础信息
+            if (data.storeName) document.getElementById('storeName').value = data.storeName;
+            if (data.holidayName) document.getElementById('holidayName').value = data.holidayName;
+            if (data.holidayDate) document.getElementById('holidayDate').value = data.holidayDate;
+            if (data.targetAmount) document.getElementById('targetAmount').value = data.targetAmount;
+            if (data.lastYearAmount) document.getElementById('lastYearAmount').value = data.lastYearAmount;
+            if (data.growthRate) document.getElementById('growthRate').value = data.growthRate;
+            
+            // 填充产品
+            if (data.products && data.products.length > 0) {
+                const rows = document.querySelectorAll('#productContainer .staff-row');
+                data.products.forEach((p, i) => {
+                    if (rows[i]) {
+                        rows[i].querySelector('.product-name').value = p.name || '';
+                        rows[i].querySelector('.product-qty').value = p.qty || '';
+                    }
+                });
+            }
+            
+            // 填充人员（简化恢复）
+            if (data.frontAmTime) document.getElementById('frontAmTime').value = data.frontAmTime;
+            if (data.frontPmTime) document.getElementById('frontPmTime').value = data.frontPmTime;
+            if (data.flowerStartTime) document.getElementById('flowerStartTime').value = data.flowerStartTime;
+            if (data.tempWorker) document.getElementById('tempWorker').value = data.tempWorker;
+            if (data.tempWorkerDetail) document.getElementById('tempWorkerDetail').value = data.tempWorkerDetail;
+            
+            // 填充活动内容
+            if (data.activityContent) document.getElementById('activityContent').value = data.activityContent;
+            if (data.wechatStore) document.getElementById('wechatStore').value = data.wechatStore;
+            if (data.wechatAll) document.getElementById('wechatAll').value = data.wechatAll;
+            if (data.privateMsg) document.getElementById('privateMsg').value = data.privateMsg;
+            if (data.douyin) document.getElementById('douyin').value = data.douyin;
+            if (data.pastIssues) document.getElementById('pastIssues').value = data.pastIssues;
+        }
+        
+        // 如果AI注入了数据
+        if (window.__HOLIDAY_DATA__) {
+            const d = window.__HOLIDAY_DATA__;
+            if (d.storeName) document.getElementById('storeName').value = d.storeName;
+            if (d.holidayName) document.getElementById('holidayName').value = d.holidayName;
+            if (d.holidayDate) document.getElementById('holidayDate').value = d.holidayDate;
+            if (d.targetAmount) document.getElementById('targetAmount').value = d.targetAmount;
+            if (d.lastYearAmount) document.getElementById('lastYearAmount').value = d.lastYearAmount;
+            if (d.growthRate) document.getElementById('growthRate').value = d.growthRate;
+        }
+    } catch(e) { console.log('恢复数据失败:', e); }
+});
+</script>
+</body>
+</html>
