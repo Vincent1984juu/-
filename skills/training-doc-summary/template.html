@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f7fa;
+        }
+        
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 头部区域 */
+        .header {
+            background: linear-gradient(135deg, #003CA5 0%, #0052cc 100%);
+            color: white;
+            padding: 32px 24px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 60, 165, 0.2);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        
+        .header .learning-goal {
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.5;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            margin-top: 10px;
+        }
+        
+        .brand-tag {
+            display: inline-block;
+            background: #EB6517;
+            color: white;
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+        
+        /* 卡片通用样式 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #003CA5;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* 学完收获 */
+        .outcomes {
+            background: linear-gradient(135deg, #fff8f0 0%, #fff 100%);
+            border: 1px solid #ffe4cc;
+        }
+        
+        .outcomes ul {
+            list-style: none;
+        }
+        
+        .outcomes li {
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+            font-size: 14px;
+            border-bottom: 1px dashed rgba(235, 101, 23, 0.15);
+        }
+        
+        .outcomes li:last-child {
+            border-bottom: none;
+        }
+        
+        .outcomes li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #EB6517;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        /* 核心内容速览 */
+        .key-content ul {
+            list-style: none;
+        }
+        
+        .key-content li {
+            padding: 10px 0;
+            padding-left: 20px;
+            position: relative;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .key-content li:last-child {
+            border-bottom: none;
+        }
+        
+        .key-content li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #003CA5;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .key-content .item-title {
+            font-weight: 600;
+            color: #003CA5;
+            margin-right: 6px;
+        }
+        
+        .key-content .item-desc {
+            color: #666;
+        }
+        
+        /* 重点提示 */
+        .highlights {
+            background: linear-gradient(135deg, #C4E6F4 0%, #f0f9fc 100%);
+            border-left: 3px solid #003CA5;
+        }
+        
+        .highlight-item {
+            padding: 10px 0;
+            font-size: 14px;
+            border-bottom: 1px dashed rgba(0, 60, 165, 0.1);
+        }
+        
+        .highlight-item:last-child {
+            border-bottom: none;
+        }
+        
+        .highlight-icon {
+            color: #EB6517;
+            margin-right: 4px;
+        }
+        
+        /* 一句话总结 */
+        .summary-box {
+            background: #003CA5;
+            color: white;
+            text-align: center;
+            padding: 24px;
+        }
+        
+        .summary-box .card-title {
+            color: rgba(255,255,255,0.8);
+            justify-content: center;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        
+        .summary-content {
+            font-size: 15px;
+            line-height: 1.7;
+            font-weight: 500;
+        }
+        
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .footer .brand {
+            color: #003CA5;
+            font-weight: 600;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 600px) {
+            .container {
+                padding: 12px;
+            }
+            
+            .header {
+                padding: 24px 18px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .card {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="brand-tag">学前导读</div>
+            <h1>{{TITLE}}</h1>
+            <p class="learning-goal">🎯 学习目标：{{LEARNING_GOAL}}</p>
+        </div>
+        
+        <!-- 学完你能 -->
+        <div class="card outcomes">
+            <div class="card-title">📋 学完你能</div>
+            <ul>
+                {{OUTCOMES}}
+            </ul>
+        </div>
+        
+        <!-- 核心内容速览 -->
+        <div class="card key-content">
+            <div class="card-title">🎯 核心内容</div>
+            <ul>
+                {{KEY_CONTENTS}}
+            </ul>
+        </div>
+        
+        <!-- 重点提示 -->
+        <div class="card highlights">
+            <div class="card-title">⭐ 重点提示</div>
+            {{HIGHLIGHTS}}
+        </div>
+        
+        <!-- 一句话总结 -->
+        <div class="card summary-box">
+            <div class="card-title">💡 一句话总结</div>
+            <p class="summary-content">{{SUMMARY}}</p>
+        </div>
+        
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>聚满分培训部 · 学前导读</p>
+        </div>
+    </div>
+</body>
+</html>

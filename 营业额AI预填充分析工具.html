@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聚满分 · 营业额AI分析工具</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: #f5f7fa; color: #333; line-height: 1.6;
+        }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .header {
+            text-align: center; padding: 30px 0;
+            background: linear-gradient(135deg, #003CA5 0%, #0055cc 100%);
+            color: white; border-radius: 12px; margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(0,60,165,0.3);
+        }
+        .header h1 { font-size: 26px; margin-bottom: 8px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+
+        .card {
+            background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .card-title {
+            font-size: 18px; font-weight: 700; color: #003CA5;
+            margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #e8f0fe;
+        }
+
+        .ai-badge {
+            display: inline-block; background: linear-gradient(135deg, #e8f0ff 0%, #d0e0ff 100%);
+            color: #003CA5; padding: 4px 12px; border-radius: 20px; font-size: 12px;
+            font-weight: 600; margin-bottom: 12px;
+        }
+
+        .calc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .calc-item {
+            background: white; border-radius: 8px; padding: 14px; text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04); border: 1px solid #e8f0fe;
+        }
+        .calc-item .calc-value { font-size: 22px; font-weight: 700; color: #003CA5; }
+        .calc-item .calc-value.negative { color: #e53935; }
+        .calc-item .calc-value.positive { color: #43a047; }
+        .calc-item .calc-label { font-size: 12px; color: #666; margin-top: 4px; }
+
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .chart-container { position: relative; height: 280px; margin: 16px 0; }
+        @media (max-width: 768px) { .chart-grid { grid-template-columns: 1fr; } }
+
+        .data-summary {
+            background: linear-gradient(135deg, #e8f0ff 0%, #f0f7ff 100%);
+            border-radius: 10px; padding: 16px; margin-top: 12px;
+        }
+        .data-summary p { margin: 6px 0; font-size: 14px; }
+        .data-summary .highlight { font-weight: 600; color: #003CA5; }
+        .data-summary .negative { color: #e53935; }
+        .data-summary .positive { color: #43a047; }
+
+        .root-cause-section { margin-bottom: 20px; }
+        .root-cause-category {
+            background: #f0f7ff; border-left: 4px solid #003CA5;
+            padding: 12px 16px; margin-bottom: 10px; font-weight: 600; color: #003CA5;
+            border-radius: 0 8px 8px 0;
+        }
+        .root-cause-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding-left: 16px; }
+        .root-cause-option {
+            padding: 10px 14px; background: white; border: 1.5px solid #e0e0e0;
+            border-radius: 8px; cursor: pointer; font-size: 13px;
+            transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+        }
+        .root-cause-option:hover { border-color: #003CA5; }
+        .root-cause-option.selected { border-color: #003CA5; background: #e8f0fe; }
+        .root-cause-option .check-icon { width: 18px; height: 18px; border-radius: 4px; border: 2px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; color: transparent; transition: all 0.2s; flex-shrink: 0; }
+        .root-cause-option.selected .check-icon { background: #003CA5; border-color: #003CA5; color: white; }
+
+        .action-plan-item {
+            background: white; border: 1.5px solid #e0e0e0; border-radius: 10px;
+            padding: 16px; margin-bottom: 12px;
+        }
+        .action-plan-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .action-plan-title { font-weight: 600; color: #003CA5; font-size: 15px; }
+        .action-plan-body { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .action-plan-body .form-group { margin-bottom: 0; }
+        .action-plan-body .form-group input { font-size: 13px; padding: 8px 10px; border: 1.5px solid #e0e0e0; border-radius: 8px; width: 100%; }
+        .action-plan-body .form-group label { font-size: 12px; color: #666; margin-bottom: 4px; display: block; }
+
+        .form-group { display: flex; flex-direction: column; }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 10px 12px; border: 1.5px solid #e0e0e0; border-radius: 8px;
+            font-size: 14px; font-family: inherit; background: #fafafa;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: #003CA5; background: white;
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: 600;
+            cursor: pointer; border: none; transition: all 0.2s;
+        }
+        .btn-primary { background: #003CA5; color: white; box-shadow: 0 4px 12px rgba(0,60,165,0.3); }
+        .btn-primary:hover { background: #002a7a; transform: translateY(-2px); }
+        .btn-secondary { background: #e8f0fe; color: #003CA5; border: 1px solid #cce0ff; }
+        .btn-secondary:hover { background: #d0e0fc; }
+        .btn-group { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
+
+        .diagnosis-box { background: #fff3e0; border: 2px solid #ff9800; border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+        .diagnosis-title { font-weight: 700; color: #e65100; margin-bottom: 12px; }
+        .diagnosis-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .diagnosis-option {
+            padding: 12px 16px; background: white; border: 2px solid #e0e0e0;
+            border-radius: 8px; cursor: pointer; font-size: 14px; text-align: center; transition: all 0.2s;
+        }
+        .diagnosis-option:hover { border-color: #003CA5; }
+        .diagnosis-option.selected { border-color: #003CA5; background: #e8f0fe; color: #003CA5; font-weight: 600; }
+
+        #previewSection { display: none; margin-top: 24px; }
+        #previewSection.active { display: block; }
+        .preview-content { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        .preview-content h2 { text-align: center; color: #003CA5; margin-bottom: 24px; font-size: 22px; }
+        .preview-content .section { margin-bottom: 20px; }
+        .preview-content .section-title { font-weight: 700; font-size: 16px; color: #003CA5; margin-bottom: 10px; padding-bottom: 6px; }
+
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+        .data-table th, .data-table td { padding: 10px 8px; text-align: center; border: 1px solid #e0e0e0; }
+        .data-table th { background: #f0f7ff; color: #003CA5; font-weight: 600; }
+        .data-table td { background: white; }
+
+        @media print { .no-print { display: none !important; } body { background: white; } }
+        @media (max-width: 640px) {
+            .calc-grid, .root-cause-options, .diagnosis-options { grid-template-columns: 1fr; }
+            .action-plan-body { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 聚满分 · 营业额AI分析工具</h1>
+            <p>AI自动分析数据 → 店长填写根源与行动计划 → 生成完整报告</p>
+        </div>
+
+        <!-- ========== 第一部分：AI自动生成数据分析 ========== -->
+        <div class="card">
+            <div class="ai-badge">🤖 AI 已根据提供数据自动分析</div>
+            <div class="card-title">📊 数据分析结果</div>
+
+            <div id="aiAnalysisContent">
+                <!-- AI分析内容将在这里动态填充 -->
+                <p style="color:#999;text-align:center;padding:40px 0;">等待数据...</p>
+            </div>
+        </div>
+
+        <!-- ========== 第二部分：店长填写 ========== -->
+        <div class="card">
+            <div class="card-title">🔍 问题诊断 · 业绩差距类型</div>
+            <div class="diagnosis-box">
+                <div class="diagnosis-title">本月业绩表现属于哪种情况？（点击选择）</div>
+                <div class="diagnosis-options">
+                    <div class="diagnosis-option" data-value="客单数下降" onclick="selectDiagnosis(this)">
+                        📉 客单数下降<br><small style="color:#999">营业额↓，客单数↓，客单价持平</small>
+                    </div>
+                    <div class="diagnosis-option" data-value="客单价下降" onclick="selectDiagnosis(this)">
+                        💰 客单价下降<br><small style="color:#999">营业额↓，客单价↓，客单数持平</small>
+                    </div>
+                    <div class="diagnosis-option" data-value="双降" onclick="selectDiagnosis(this)">
+                        ⚠️ 客单数&客单价双降<br><small style="color:#999">营业额↓，两者都下降</small>
+                    </div>
+                    <div class="diagnosis-option" data-value="达标但想提升" onclick="selectDiagnosis(this)">
+                        🚀 已达标，想再突破<br><small style="color:#999">营业额达标，寻找机会点</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">🎯 根源分析</div>
+            <p style="font-size:13px;color:#666;margin-bottom:16px;">按"营业额=客单价×客单数"框架分类。点击选择符合本门店情况的根源（可多选）：</p>
+
+            <div class="root-cause-section">
+                <div class="root-cause-category">一、提升客单数（路上客流→进店客流→成交）</div>
+                <div style="font-weight:600;color:#333;margin:10px 0 8px 16px;font-size:14px;">1. 增加曝光率</div>
+                <div class="root-cause-options">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>门面不整洁、灯光暗、有遮挡</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>门口试吃未常态化或品质差</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>门口宣传海报未及时正确展示</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>门口录音未及时正确播放</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>朋友圈未每天发或内容质量差</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>周边社区/写字楼未拓展</div>
+                </div>
+                <div style="font-weight:600;color:#333;margin:10px 0 8px 16px;font-size:14px;">2. 提高转化率</div>
+                <div class="root-cause-options">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>顾客进门无主动招呼/试吃</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>高峰期排队长、收银慢</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>卖场/产品/员工仪容不整洁</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>促销活动未宣传或员工未告知</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>陈列不饱满、C位未放主推品</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>产品卖相差、吸引力不足</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>引流品，利润品没有合理搭配</div>
+                </div>
+                <div style="font-weight:600;color:#333;margin:10px 0 8px 16px;font-size:14px;">3. 增加消费场景</div>
+                <div class="root-cause-options">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>早餐场景未推套餐/产品不足</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>未针对放学/下班时段备货</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>节日/特殊场景未提前备货主推</div>
+                </div>
+            </div>
+
+            <div class="root-cause-section">
+                <div class="root-cause-category">二、提升客单价（让顾客买更多、买更贵）</div>
+                <div style="font-weight:600;color:#333;margin:10px 0 8px 16px;font-size:14px;">4. 选品策略</div>
+                <div class="root-cause-options">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>高单价/高毛利产品未放C位</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>产品未匹配季节需求</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>未按周边客群调整选品</div>
+                </div>
+                <div style="font-weight:600;color:#333;margin:10px 0 8px 16px;font-size:14px;">5. 陈列优化</div>
+                <div class="root-cause-options">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>高单价产品未放黄金位置</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>未设礼盒/套餐推荐区</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>搭配产品未放关联位置</div>
+                </div>
+                <div style="font-weight:600;color:#333;margin:10px 0 8px 16px;font-size:14px;">6. 二次推荐（连带销售）</div>
+                <div class="root-cause-options">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>收银时未推荐加购</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>热酥出炉未主动推荐</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>未推饮品搭配</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>员工无标准推荐话术</div>
+                </div>
+                <div style="font-weight:600;color:#333;margin:10px 0 8px 16px;font-size:14px;">7. 活动设计</div>
+                <div class="root-cause-options">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>未设置有效的引流或提升单价的活动</div>
+                </div>
+            </div>
+
+            <div class="root-cause-section">
+                <div class="root-cause-category">三、提升复购率（让顾客再来）</div>
+                <div class="root-cause-options">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>产品鲜度差、超时未下架</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>生日蛋糕客户未回访</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>客诉处理不及时</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>未发券唤醒沉睡客户</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>未建立顾客社群</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>储值活动没有执行到位</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>高峰期出品不及时，陈列不够饱满</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>服务态度不够友善快捷</div>
+                </div>
+            </div>
+
+            <div class="root-cause-section">
+                <div class="root-cause-category">四、基础管理动作（支撑以上所有）</div>
+                <div class="root-cause-options">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>本月缺乏工作重心，没有明确业绩提升核心动作</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>没有针对月重点事项，制定明确的目标、计划、复盘</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>没有和团队共识目标、计划，并合理分配工作</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>团队不稳定，人手不足，或安排不合理</div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span>对团队激励不足，团队士气不足</div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top:16px;">
+                <label>其他根源（补充说明）</label>
+                <textarea id="otherRootCauses" placeholder="如有其他根源，请补充..." style="min-height:80px;"></textarea>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">✅ 行动计划</div>
+            <p style="font-size:13px;color:#666;margin-bottom:16px;">针对已选择的根源，制定具体、可衡量、可落地的行动计划：</p>
+            <div id="actionPlanContainer"></div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="addActionItem()">+ 添加行动计划</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">🎯 下月目标</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+                <div class="form-group">
+                    <label>下月营业额目标（元）</label>
+                    <input type="number" id="nextMonthTarget" placeholder="如：500000">
+                </div>
+                <div class="form-group">
+                    <label>下月充值目标（元）</label>
+                    <input type="number" id="nextMonthRecharge" placeholder="如：50000">
+                </div>
+                <div class="form-group">
+                    <label>来客数目标</label>
+                    <input type="number" id="nextMonthCustomers" placeholder="如：20000">
+                </div>
+                <div class="form-group">
+                    <label>客单价目标</label>
+                    <input type="number" id="nextMonthAvgPrice" placeholder="如：26">
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-group" style="margin: 24px 0;">
+            <button class="btn btn-primary" onclick="generateReport()" style="font-size: 18px; padding: 16px 40px;">
+                🚀 生成完整分析报告
+            </button>
+        </div>
+
+        <!-- ========== 报告预览区 ========== -->
+        <div id="previewSection">
+            <div class="btn-group no-print" style="margin-bottom: 16px;">
+                <button class="btn btn-primary" onclick="copyReport()">📋 复制报告</button>
+                <button class="btn btn-secondary" onclick="printReport()">🖨️ 打印</button>
+                <button class="btn btn-secondary" onclick="saveAsImage()">📷 截图</button>
+            </div>
+            <div id="previewContent" class="preview-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 数据配置区（AI将在这里注入数据） ==========
+        window.__AI_DATA__ = null; // AI将通过外部脚本填充此数据
+
+        // 示例数据格式（参考）：
+        // {
+        //     "storeName": "万民城店",
+        //     "region": "孙红梅区",
+        //     "month": "2026-05",
+        //     "targetSales": 500000,
+        //     "actualSales": 470148,
+        //     "lastMonthSales": 450000,
+        //     "lastYearSales": 420000,
+        //     "targetCustomers": 20000,
+        //     "actualCustomers": 18421,
+        //     "lastMonthCustomers": 18000,
+        //     "lastYearCustomers": 0,
+        //     "targetAvgPrice": 26,
+        //     "actualAvgPrice": 25.52,
+        //     "lastMonthAvgPrice": 25,
+        //     "lastYearAvgPrice": 0,
+        //     "categories": [
+        //         {"name": "现烤面包", "actual": 131342, "target": 140000, "lastMonth": 125000},
+        //         {"name": "包装产品", "actual": 85076, "target": 90000, "lastMonth": 82000},
+        //         {"name": "热酥", "actual": 33763, "target": 35000, "lastMonth": 32000},
+        //         {"name": "蛋糕", "actual": 86758, "target": 90000, "lastMonth": 85000},
+        //         {"name": "甜品", "actual": 86059, "target": 90000, "lastMonth": 80000}
+        //     ]
+        // }
+
+        // 如果没有AI数据，显示等待提示
+        // 如果有AI数据，自动渲染分析
+
+        let selectedDiagnosis = '';
+        let selectedRootCauses = [];
+        let actionItemCount = 0;
+        let barChartInstance = null;
+        let pieChartInstance = null;
+
+        function calcChange(current, previous) {
+            if (!previous || previous == 0) return null;
+            return ((current - previous) / previous * 100);
+        }
+
+        function formatPct(val) {
+            if (val === null) return '—';
+            return (val > 0 ? '+' : '') + val.toFixed(1) + '%';
+        }
+
+        function renderAIAnalysis(data) {
+            const container = document.getElementById('aiAnalysisContent');
+            if (!data) {
+                container.innerHTML = '<p style="color:#999;text-align:center;padding:40px 0;">等待数据...</p>';
+                return;
+            }
+
+            const achievement = data.targetSales > 0 ? (data.actualSales / data.targetSales * 100) : 0;
+            const salesMom = calcChange(data.actualSales, data.lastMonthSales);
+            const salesYoy = calcChange(data.actualSales, data.lastYearSales);
+            const customersMom = calcChange(data.actualCustomers, data.lastMonthCustomers);
+            const avgPriceMom = calcChange(data.actualAvgPrice, data.lastMonthAvgPrice);
+            const gap = data.targetSales > 0 ? (data.actualSales - data.targetSales) : 0;
+
+            // 品类占比
+            let categoryHtml = '';
+            let pieData = [];
+            let pieLabels = [];
+            let pieColors = ['#003CA5', '#EB6517', '#43a047', '#7c4dff', '#ff5722'];
+            if (data.categories) {
+                data.categories.forEach((cat, idx) => {
+                    if (cat.actual > 0) {
+                        const pct = data.actualSales > 0 ? (cat.actual / data.actualSales * 100).toFixed(1) : 0;
+                        const catAchievement = cat.target > 0 ? (cat.actual / cat.target * 100).toFixed(1) : '—';
+                        const mom = calcChange(cat.actual, cat.lastMonth);
+                        categoryHtml += `
+                            <p><strong>${cat.name}：</strong>¥${cat.actual.toLocaleString()} | 占比${pct}% | 达成率${catAchievement}% | 环比${formatPct(mom)}</p>
+                        `;
+                        pieData.push(cat.actual);
+                        pieLabels.push(cat.name);
+                    }
+                });
+            }
+
+            container.innerHTML = `
+                <div class="data-summary">
+                    <p><span class="highlight">门店：</span>${data.storeName || '______'} | <span class="highlight">区域：</span>${data.region || '______'} | <span class="highlight">月份：</span>${data.month || '______'}</p>
+                    <p><span class="highlight">月营业额实际：</span>¥${data.actualSales.toLocaleString()} | <span class="highlight">目标：</span>¥${data.targetSales.toLocaleString()} | <span class="highlight">达成率：</span><span class="${achievement >= 100 ? 'positive' : 'negative'}">${achievement.toFixed(1)}%</span></p>
+                    <p><span class="highlight">环比：</span><span class="${salesMom >= 0 ? 'positive' : 'negative'}">${formatPct(salesMom)}</span> | <span class="highlight">同比：</span><span class="${salesYoy >= 0 ? 'positive' : 'negative'}">${formatPct(salesYoy)}</span></p>
+                    <p><span class="highlight">来客数：</span>${data.actualCustomers.toLocaleString()} | 环比：<span class="${customersMom >= 0 ? 'positive' : 'negative'}">${formatPct(customersMom)}</span></p>
+                    <p><span class="highlight">客单价：</span>¥${data.actualAvgPrice.toFixed(2)} | 环比：<span class="${avgPriceMom >= 0 ? 'positive' : 'negative'}">${formatPct(avgPriceMom)}</span></p>
+                    <p><span class="highlight">与目标差额：</span><span class="${gap >= 0 ? 'positive' : 'negative'}">${gap >= 0 ? '+' : ''}¥${Math.abs(gap).toLocaleString()}</span></p>
+                </div>
+
+                <div class="calc-grid" style="margin-top:16px;">
+                    <div class="calc-item">
+                        <div class="calc-value ${achievement >= 100 ? 'positive' : 'negative'}">${achievement.toFixed(1)}%</div>
+                        <div class="calc-label">目标达成率</div>
+                    </div>
+                    <div class="calc-item">
+                        <div class="calc-value ${salesMom >= 0 ? 'positive' : 'negative'}">${formatPct(salesMom)}</div>
+                        <div class="calc-label">营业额环比</div>
+                    </div>
+                    <div class="calc-item">
+                        <div class="calc-value ${salesYoy >= 0 ? 'positive' : 'negative'}">${formatPct(salesYoy)}</div>
+                        <div class="calc-label">营业额同比</div>
+                    </div>
+                    <div class="calc-item">
+                        <div class="calc-value ${customersMom >= 0 ? 'positive' : 'negative'}">${formatPct(customersMom)}</div>
+                        <div class="calc-label">来客数环比</div>
+                    </div>
+                    <div class="calc-item">
+                        <div class="calc-value ${avgPriceMom >= 0 ? 'positive' : 'negative'}">${formatPct(avgPriceMom)}</div>
+                        <div class="calc-label">客单价环比</div>
+                    </div>
+                    <div class="calc-item">
+                        <div class="calc-value ${gap >= 0 ? 'positive' : 'negative'}">${gap >= 0 ? '+' : ''}¥${Math.abs(gap).toLocaleString()}</div>
+                        <div class="calc-label">与目标差额</div>
+                    </div>
+                </div>
+
+                <div style="margin-top:16px;">
+                    <div style="font-weight:600;color:#003CA5;margin-bottom:8px;">🍰 品类销售结构</div>
+                    ${categoryHtml || '<p style="color:#999;">（未提供品类数据）</p>'}
+                </div>
+
+                <div class="chart-grid" style="margin-top:16px;">
+                    <div class="card" style="margin-bottom:0;">
+                        <div style="font-size:14px;font-weight:600;color:#003CA5;margin-bottom:8px;">目标 vs 实际对比</div>
+                        <div class="chart-container" style="height:220px;"><canvas id="barChart"></canvas></div>
+                    </div>
+                    <div class="card" style="margin-bottom:0;">
+                        <div style="font-size:14px;font-weight:600;color:#003CA5;margin-bottom:8px;">品类销售占比</div>
+                        <div class="chart-container" style="height:220px;"><canvas id="pieChart"></canvas></div>
+                    </div>
+                </div>
+            `;
+
+            // 渲染图表
+            setTimeout(() => {
+                renderBarChart(data);
+                if (pieData.length > 0) {
+                    renderPieChart(pieLabels, pieData, pieColors);
+                }
+            }, 100);
+        }
+
+        function renderBarChart(data) {
+            const ctx = document.getElementById('barChart');
+            if (!ctx) return;
+            if (barChartInstance) barChartInstance.destroy();
+
+            barChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['营业额', '来客数', '客单价'],
+                    datasets: [
+                        { label: '实际', data: [data.actualSales, data.actualCustomers, data.actualAvgPrice], backgroundColor: '#003CA5', borderRadius: 6 },
+                        { label: '目标', data: [data.targetSales, data.targetCustomers, data.targetAvgPrice], backgroundColor: '#90caf9', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function renderPieChart(labels, data, colors) {
+            const ctx = document.getElementById('pieChart');
+            if (!ctx) return;
+            if (pieChartInstance) pieChartInstance.destroy();
+
+            pieChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, data.length),
+                        borderWidth: 2, borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right' } }
+                }
+            });
+        }
+
+        // 检查是否有AI数据
+        if (window.__AI_DATA__) {
+            renderAIAnalysis(window.__AI_DATA__);
+        }
+
+        // 外部注入数据接口
+        window.injectAIData = function(data) {
+            window.__AI_DATA__ = data;
+            renderAIAnalysis(data);
+        };
+
+        // ========== 根源分析交互 ==========
+        function selectDiagnosis(el) {
+            document.querySelectorAll('.diagnosis-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedDiagnosis = el.dataset.value;
+        }
+
+        function toggleRootCause(el) {
+            el.classList.toggle('selected');
+            const text = el.textContent.replace('✓', '').trim();
+            if (el.classList.contains('selected')) {
+                if (!selectedRootCauses.includes(text)) selectedRootCauses.push(text);
+            } else {
+                selectedRootCauses = selectedRootCauses.filter(r => r !== text);
+            }
+        }
+
+        // ========== 行动计划 ==========
+        function addActionItem() {
+            actionItemCount++;
+            const container = document.getElementById('actionPlanContainer');
+            const div = document.createElement('div');
+            div.className = 'action-plan-item';
+            div.innerHTML = `
+                <div class="action-plan-header">
+                    <span class="action-plan-title">行动${actionItemCount}</span>
+                    <button class="btn btn-secondary" style="padding:4px 12px;font-size:12px;" onclick="this.closest('.action-plan-item').remove()">删除</button>
+                </div>
+                <div class="action-plan-body">
+                    <div class="form-group"><label>具体行动</label><input type="text" class="action-desc" placeholder="如：早班前15分钟开试吃台"></div>
+                    <div class="form-group"><label>负责人</label><input type="text" class="action-owner" placeholder="如：早班负责人"></div>
+                    <div class="form-group"><label>完成时间</label><input type="text" class="action-deadline" placeholder="如：6月25日前"></div>
+                    <div class="form-group"><label>衡量标准</label><input type="text" class="action-metric" placeholder="如：每日试吃50份"></div>
+                    <div class="form-group"><label>目标结果</label><input type="text" class="action-target" placeholder="如：客单数提升10%"></div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        // ========== 生成报告 ==========
+        function generateReport() {
+            const data = window.__AI_DATA__;
+            if (!data) {
+                alert('请先提供数据！');
+                return;
+            }
+
+            const achievement = data.targetSales > 0 ? (data.actualSales / data.targetSales * 100).toFixed(1) : '—';
+            const salesMom = formatPct(calcChange(data.actualSales, data.lastMonthSales));
+            const salesYoy = formatPct(calcChange(data.actualSales, data.lastYearSales));
+            const customersMom = formatPct(calcChange(data.actualCustomers, data.lastMonthCustomers));
+            const avgPriceMom = formatPct(calcChange(data.actualAvgPrice, data.lastMonthAvgPrice));
+            const gap = data.targetSales > 0 ? (data.actualSales - data.targetSales) : 0;
+
+            // 品类
+            let categoryHtml = '';
+            if (data.categories) {
+                data.categories.forEach(cat => {
+                    if (cat.actual > 0) {
+                        const pct = data.actualSales > 0 ? (cat.actual / data.actualSales * 100).toFixed(1) : 0;
+                        const catAchievement = cat.target > 0 ? (cat.actual / cat.target * 100).toFixed(1) : '—';
+                        categoryHtml += `<p><strong>${cat.name}：</strong>实际¥${cat.actual.toLocaleString()} | 占比${pct}% | 达成率${catAchievement}%</p>`;
+                    }
+                });
+            }
+
+            // 根源
+            let rootCausesHtml = selectedRootCauses.length > 0
+                ? selectedRootCauses.map(r => `• ${r}`).join('<br>')
+                : '（未选择根源）';
+            const otherRoot = document.getElementById('otherRootCauses').value;
+            if (otherRoot) rootCausesHtml += '<br>• 其他：' + otherRoot;
+
+            // 行动计划
+            let actionsHtml = '';
+            document.querySelectorAll('.action-plan-item').forEach((item, index) => {
+                const desc = item.querySelector('.action-desc').value || '______';
+                const owner = item.querySelector('.action-owner').value || '______';
+                const deadline = item.querySelector('.action-deadline').value || '______';
+                const metric = item.querySelector('.action-metric').value || '______';
+                const target = item.querySelector('.action-target').value || '______';
+                actionsHtml += `
+                    <div class="section">
+                        <div class="section-title">【动作${index + 1}】${desc}</div>
+                        <p>负责人：${owner} | 完成时间：${deadline}</p>
+                        <p>衡量标准：${metric} | 目标结果：${target}</p>
+                    </div>
+                `;
+            });
+            if (!actionsHtml) actionsHtml = '<p>（未填写行动计划）</p>';
+
+            // 下月目标
+            const nextTarget = document.getElementById('nextMonthTarget').value || '______';
+            const nextRecharge = document.getElementById('nextMonthRecharge').value || '______';
+            const nextCustomers = document.getElementById('nextMonthCustomers').value || '______';
+            const nextAvgPrice = document.getElementById('nextMonthAvgPrice').value || '______';
+
+            const previewContent = document.getElementById('previewContent');
+            previewContent.innerHTML = `
+                <h2 style="text-align:center;color:#003CA5;margin-bottom:24px;">月度营业额分析报告</h2>
+
+                <div class="section">
+                    <div class="section-title">📋 基础信息</div>
+                    <p>门店：${data.storeName || '______'} | 区域：${data.region || '______'} | 月份：${data.month || '______'}</p>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">📊 数据总览</div>
+                    <p><strong>月营业额：</strong>¥${data.actualSales.toLocaleString()} | 目标：¥${data.targetSales.toLocaleString()} | 达成率：${achievement}%</p>
+                    <p><strong>环比：</strong>${salesMom} | <strong>同比：</strong>${salesYoy}</p>
+                    <p><strong>来客数：</strong>${data.actualCustomers.toLocaleString()} | 环比：${customersMom}</p>
+                    <p><strong>客单价：</strong>¥${data.actualAvgPrice.toFixed(2)} | 环比：${avgPriceMom}</p>
+                    <p><strong>与目标差额：</strong>${gap >= 0 ? '+' : ''}¥${Math.abs(gap).toLocaleString()}</p>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">🍰 品类结构</div>
+                    ${categoryHtml || '<p>（未提供品类数据）</p>'}
+                </div>
+
+                <div class="section">
+                    <div class="section-title">🔍 问题诊断</div>
+                    <p>业绩类型：${selectedDiagnosis || '（未选择）'}</p>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">🎯 根源分析</div>
+                    <p>${rootCausesHtml}</p>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">✅ 行动计划</div>
+                    ${actionsHtml}
+                </div>
+
+                <div class="section">
+                    <div class="section-title">🎯 下月目标</div>
+                    <p>营业额目标：${nextTarget}元 | 充值目标：${nextRecharge}元</p>
+                    <p>来客数目标：${nextCustomers} | 客单价目标：${nextAvgPrice}元</p>
+                </div>
+
+                <div style="margin-top:40px;text-align:center;color:#999;font-size:12px;">
+                    生成时间：${new Date().toLocaleString('zh-CN')}
+                </div>
+            `;
+
+            document.getElementById('previewSection').classList.add('active');
+            document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function printReport() { window.print(); }
+
+        function copyReport() {
+            const text = document.getElementById('previewContent').innerText;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => alert('报告已复制！'));
+            } else {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('报告已复制！');
+            }
+        }
+
+        function saveAsImage() {
+            const previewContent = document.getElementById('previewContent');
+            html2canvas(previewContent, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = (window.__AI_DATA__?.storeName || '门店') + '_营业额分析.png';
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                alert('截图已保存！');
+            }).catch(err => alert('截图失败：' + err.message));
+        }
+    </script>
+</body>
+</html>

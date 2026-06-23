@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{门店名}}·{{节日}}作战计划</title>
+<style>
+:root { --brand-blue: #003CA5; --brand-orange: #EB6517; --bg-gray: #f5f6fa; --card-white: #ffffff; --text-dark: #1a1a2e; --text-gray: #666; --border-light: #e0e0e0; --success-green: #27ae60; --warning-red: #e74c3c; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif; background: var(--bg-gray); color: var(--text-dark); line-height: 2.1; padding: 0; font-size: 22px; }
+.header { background: linear-gradient(135deg, var(--brand-blue) 0%, #0055cc 100%); color: white; padding: 28px 20px; text-align: center; position: relative; overflow: hidden; }
+.header h1 { font-size: 34px; font-weight: 700; margin-bottom: 6px; }
+.header .subtitle { font-size: 20px; opacity: 0.9; }
+.goal-card { background: linear-gradient(135deg, var(--brand-orange) 0%, #ff7b35 100%); color: white; margin: -20px 16px 20px; padding: 24px; border-radius: 16px; position: relative; z-index: 10; box-shadow: 0 4px 15px rgba(235, 101, 23, 0.3); }
+.goal-card .label { font-size: 14px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }
+.goal-card .amount { font-size: 56px; font-weight: 700; margin: 6px 0; }
+.goal-card .products { font-size: 20px; opacity: 0.95; }
+.content { padding: 0 16px 24px; }
+.module { background: var(--card-white); border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.module-title { font-size: 32px; font-weight: 700; color: var(--brand-blue); margin-bottom: 20px; padding-bottom: 14px; border-bottom: 2px solid var(--border-light); display: flex; align-items: center; gap: 8px; }
+.module-title .icon { font-size: 32px; }
+.timeline { display: flex; flex-direction: column; gap: 14px; }
+.timeline-item { display: flex; gap: 14px; align-items: flex-start; }
+.timeline-badge { background: var(--brand-blue); color: white; padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: 600; white-space: nowrap; min-width: 70px; text-align: center; }
+.timeline-badge.warning { background: var(--brand-orange); }
+.timeline-badge.success { background: var(--success-green); }
+.timeline-content { flex: 1; font-size: 22px; color: var(--text-dark); }
+.shift-section { margin-bottom: 20px; }
+.shift-section:last-child { margin-bottom: 0; }
+.shift-header { background: var(--bg-gray); padding: 12px 16px; border-radius: 8px; font-weight: 600; font-size: 24px; color: var(--brand-blue); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+.shift-time { font-size: 14px; color: var(--text-gray); font-weight: 400; }
+.person-list { display: flex; flex-direction: column; gap: 10px; }
+.person-item { display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: #fafbfc; border-radius: 8px; border-left: 3px solid var(--brand-blue); }
+.person-name { font-weight: 600; color: var(--brand-blue); min-width: 60px; font-size: 22px; }
+.person-role { color: var(--text-gray); font-size: 21px; }
+.temp-worker { border-left-color: var(--brand-orange); }
+.temp-worker .person-name { color: var(--brand-orange); }
+.special-note { background: #fff3e0; border-left: 3px solid var(--brand-orange); padding: 12px 16px; border-radius: 0 8px 8px 0; margin-top: 10px; font-size: 21px; color: #d84315; }
+.action-list { counter-reset: action; display: flex; flex-direction: column; gap: 14px; }
+.action-item { display: flex; gap: 14px; align-items: flex-start; }
+.action-num { background: var(--brand-blue); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+.action-text { flex: 1; font-size: 22px; padding-top: 2px; }
+.highlight { background: #fff3e0; padding: 2px 6px; border-radius: 4px; color: #d84315; font-weight: 600; }
+.emergency-item { display: flex; gap: 10px; padding: 14px; background: #fff5f5; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid var(--warning-red); }
+.emergency-icon { font-size: 20px; flex-shrink: 0; }
+.emergency-text { font-size: 21px; }
+.emergency-solution { color: var(--warning-red); font-weight: 600; }
+.marketing-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.marketing-item { background: #e8f4fd; padding: 16px; border-radius: 10px; text-align: center; }
+.marketing-icon { font-size: 32px; margin-bottom: 8px; }
+.marketing-title { font-weight: 600; font-size: 17px; color: var(--brand-blue); }
+.marketing-desc { font-size: 15px; color: var(--text-gray); margin-top: 4px; }
+.tips-box { background: linear-gradient(135deg, var(--brand-blue) 0%, #0055cc 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; }
+.tips-title { font-size: 16px; opacity: 0.9; margin-bottom: 14px; }
+.tips-content { display: flex; flex-direction: column; gap: 10px; }
+.tip-line { font-size: 23px; font-weight: 600; }
+.tip-highlight { color: #ffd700; }
+.footer { text-align: center; padding: 24px; font-size: 20px; color: var(--text-gray); }
+@media print { body { background: white; } .module { box-shadow: none; border: 1px solid var(--border-light); break-inside: avoid; } }
+</style>
+</head>
+<body>
+<div class="header">
+<h1>{{门店名}} · {{节日}}作战计划</h1>
+<div class="subtitle">{{日期}}</div>
+</div>
+<div class="goal-card">
+<div class="label">营业额目标</div>
+<div class="amount">¥{{目标金额}}</div>
+<div class="products">主推：{{产品1}}{{数量1}}个 / {{产品2}}{{数量2}}个 / {{产品3}}{{数量3}}个</div>
+</div>
+<div class="content">
+<!-- 时间线模块 -->
+<div class="module">
+<div class="module-title"><span class="icon">📅</span>时间线总览</div>
+<div class="timeline">
+<div class="timeline-item"><div class="timeline-badge">T-3~T-1</div><div class="timeline-content">朋友圈启动、储值活动上线、备货确认</div></div>
+<div class="timeline-item"><div class="timeline-badge warning">T-1 ⭐</div><div class="timeline-content"><strong>关键日</strong>：人员排班最终确认、物料到位、设备检查、提前生产{{提前生产产品}}蛋糕</div></div>
+<div class="timeline-item"><div class="timeline-badge">T日</div><div class="timeline-content">现场执行、出品保障、客情服务</div></div>
+<div class="timeline-item"><div class="timeline-badge success">T+1</div><div class="timeline-content">数据核对、问题记录、经验归档</div></div>
+</div>
+</div>
+
+<!-- 人员排班模块 -->
+<div class="module">
+<div class="module-title"><span class="icon">👥</span>人员排班</div>
+<!-- 前场 -->
+<div class="shift-section">
+<div class="shift-header"><span>前场</span></div>
+<div class="shift-header"><span>早班</span><span class="shift-time">{{前场早班时间}}</span></div>
+<div class="person-list">
+{{前场早班人员}}
+</div>
+<div class="shift-header" style="margin-top: 12px;"><span>晚班</span><span class="shift-time">{{前场晚班时间}}</span></div>
+<div class="person-list">
+{{前场晚班人员}}
+</div>
+</div>
+<!-- 后厨 -->
+<div class="shift-section">
+<div class="shift-header"><span>后厨</span></div>
+<div class="person-list">
+{{后厨人员}}
+</div>
+<div class="special-note"><strong>T-1特别安排</strong>：开胶纸方便打包，刀叉皇冠配好200~300份统一装框；收银台物料（胶袋/蛋挞盒/刀叉/吸管/饮料柜）整理补充完</div>
+</div>
+<!-- 裱花房 -->
+<div class="shift-section">
+<div class="shift-header"><span>裱花房</span><span class="shift-time">{{裱花房开工时间}}</span></div>
+<div class="person-list">
+{{裱花房人员}}
+</div>
+<div class="special-note"><strong>T-1特别安排</strong>：水果备够中午用量、盘点所有插件辅料、临时工安排鲜花梗粘巧克力</div>
+</div>
+</div>
+
+<!-- 前场作战事项 -->
+<div class="module">
+<div class="module-title"><span class="icon">⚔️</span>前场作战事项</div>
+<div class="action-list">
+<div class="action-item"><div class="action-num">1</div><div class="action-text">订蛋糕问<span class="highlight">"最晚几点拿"</span>，写时间段，错开 <span class="highlight">{{高峰时段}}</span> 高峰</div></div>
+<div class="action-item"><div class="action-num">2</div><div class="action-text">优先推现卖，<span class="highlight">不推4寸迷你</span>（耗时耗力利润低）</div></div>
+<div class="action-item"><div class="action-num">3</div><div class="action-text"><span class="highlight">{{主推产品压单}}</span>直接压摆卖单，不加字不丟单进花房</div></div>
+<div class="action-item"><div class="action-num">4</div><div class="action-text">收银主动提醒：会员有优惠券可用，引导{{储值活动内容}}</div></div>
+<div class="action-item"><div class="action-num">5</div><div class="action-text">取蛋糕对单号+备注，白单红单放篮子不遗漏</div></div>
+<div class="action-item"><div class="action-num">6</div><div class="action-text"><span class="highlight">送货单</span>：黑色大头笔写大字，提前1小时发给跑腿</div></div>
+<div class="action-item"><div class="action-num">7</div><div class="action-text">顾客订蛋糕提醒<span class="highlight">拿单或拍照留底</span>，不要只报电话号码</div></div>
+<div class="action-item"><div class="action-num">8</div><div class="action-text">收银员留意会员卡<span class="highlight">20元蛋糕券</span>，提醒使用</div></div>
+<div class="action-item"><div class="action-num">9</div><div class="action-text">拿蛋糕时和顾客互动，<span class="highlight">祝节日快乐</span></div></div>
+<div class="action-item"><div class="action-num">10</div><div class="action-text">当天现烤包销量好，<span class="highlight">关注出品及时补货</span></div></div>
+<div class="action-item"><div class="action-num">11</div><div class="action-text">现卖蛋糕全部放蛋糕柜，鲜奶油蛋糕放2楼<span class="highlight">空调直吹</span></div></div>
+<div class="action-item"><div class="action-num">12</div><div class="action-text">收银台物料整理：胶袋/蛋挞盒/刀叉/吸管/饮料柜</div></div>
+</div>
+</div>
+
+<!-- 后厨作战事项 -->
+<div class="module">
+<div class="module-title"><span class="icon">🔥</span>后厨作战事项</div>
+<div class="action-list">
+<div class="action-item"><div class="action-num">1</div><div class="action-text">T-1提前烤好<strong>{{提前生产产品}}</strong>蛋糕，视情况加量</div></div>
+<div class="action-item"><div class="action-num">2</div><div class="action-text">早班主攻烤制，<strong>{{后厨早班烤制人员}}</strong>负责烤制，<strong>{{后厨早班备货人员}}</strong>负责备货</div></div>
+<div class="action-item"><div class="action-num">3</div><div class="action-text">晚班主攻出品，<strong>{{后厨晚班出品人员}}</strong>负责出品</div></div>
+<div class="action-item"><div class="action-num">4</div><div class="action-text">晚班11点后安排1人后厨协助蛋糕房切水果、打杂</div></div>
+<div class="action-item"><div class="action-num">5</div><div class="action-text">高峰时段增加现烤包出炉频率，保证前场不断货</div></div>
+<div class="action-item"><div class="action-num">6</div><div class="action-text">晚班高峰期拿蛋糕时段，<span class="highlight">一定不能出错</span>，仔细核对订单</div></div>
+</div>
+</div>
+
+<!-- 裱花作战事项 -->
+<div class="module">
+<div class="module-title"><span class="icon">🎂</span>裱花作战事项</div>
+<div class="action-list">
+<div class="action-item"><div class="action-num">1</div><div class="action-text">提前烤好蛋糕胚，<strong>水果备够中午用量</strong></div></div>
+<div class="action-item"><div class="action-num">2</div><div class="action-text"><strong>插件盘点</strong>，辅料对数，确保装饰物料齐全</div></div>
+<div class="action-item"><div class="action-num">3</div><div class="action-text">临时工安排<strong>鲜花梗粘巧克力</strong></div></div>
+<div class="action-item"><div class="action-num">4</div><div class="action-text">蛋糕柜温度正常，<strong>不定时检查</strong></div></div>
+<div class="action-item"><div class="action-num">5</div><div class="action-text">物料到位：胶纸/刀叉/礼盒装框 <strong>{{物料份数}}份</strong>，统一用框装好放</div></div>
+<div class="action-item"><div class="action-num">6</div><div class="action-text">检查慕斯/芝士蛋糕订单是否已下单后厨或工厂，<strong>核对日期</strong></div></div>
+<div class="action-item"><div class="action-num">7</div><div class="action-text">放单篮子满了及时处理，<strong>用夹子夹好</strong>，避免漏单丢失</div></div>
+<div class="action-item"><div class="action-num">8</div><div class="action-text">蛋糕做好<strong>拿出来放蛋糕柜存放</strong>，不要随手乱放</div></div>
+<div class="action-item"><div class="action-num">9</div><div class="action-text">送货蛋糕看起来容易掉落的，<strong>围胶边</strong>保护</div></div>
+<div class="action-item"><div class="action-num">10</div><div class="action-text">当天很忙很辛苦，<span class="highlight">多喝水</span>，同事互相配合抽空顶岗食饭</div></div>
+</div>
+</div>
+
+<!-- 预热宣传 -->
+<div class="module">
+<div class="module-title"><span class="icon">📱</span>预热宣传</div>
+<div class="marketing-grid">
+<div class="marketing-item"><div class="marketing-icon">💰</div><div class="marketing-title">储值活动</div><div class="marketing-desc">{{储值活动内容}}</div></div>
+<div class="marketing-item"><div class="marketing-icon">📲</div><div class="marketing-title">朋友圈</div><div class="marketing-desc">提前{{朋友圈提前天数}}天每天{{朋友圈每天条数}}条<br>发内容+陈列柜图片</div></div>
+<div class="marketing-item"><div class="marketing-icon">🎬</div><div class="marketing-title">抖音</div><div class="marketing-desc">个人+公司手机+同事<br>转发提升浏览量</div></div>
+<div class="marketing-item"><div class="marketing-icon">🎫</div><div class="marketing-title">外卖平台</div><div class="marketing-desc">京东/美团上架<br>活动产品</div></div>
+</div>
+</div>
+
+<!-- 突发预案 -->
+<div class="module">
+<div class="module-title"><span class="icon">🚨</span>突发预案</div>
+<div class="emergency-item"><span class="emergency-icon">⚡</span><div class="emergency-text"><span class="emergency-solution">花房超产能</span> → 店长立即沟通延单/停订，提前2小时评估产能</div></div>
+<div class="emergency-item"><span class="emergency-icon">👥</span><div class="emergency-text"><span class="emergency-solution">取蛋糕排队</span> → 前台提醒"拿单或拍照"，高峰期加开临时窗口</div></div>
+<div class="emergency-item"><span class="emergency-icon">🎂</span><div class="emergency-text"><span class="emergency-solution">裱花房爆单</span> → 外场提前电联客人沟通延迟，现卖蛋糕优先推</div></div>
+<div class="emergency-item"><span class="emergency-icon">📱</span><div class="emergency-text"><span class="emergency-solution">外卖爆单</span> → 京东/美团及时上下架，避免超卖</div></div>
+<div class="emergency-item"><span class="emergency-icon">📦</span><div class="emergency-text"><span class="emergency-solution">物料不够</span> → T-1晚三遍检查，胶纸/刀叉/礼盒备用装框</div></div>
+<div class="emergency-item"><span class="emergency-icon">❄️</span><div class="emergency-text"><span class="emergency-solution">蛋糕柜温度异常</span> → 半成品放2楼办公室空调直吹</div></div>
+<div class="emergency-item"><span class="emergency-icon">🏃</span><div class="emergency-text"><span class="emergency-solution">人员缺岗</span> → 机动人员顶位，后厨跨岗支援</div></div>
+<div class="emergency-item"><span class="emergency-icon">⏰</span><div class="emergency-text"><span class="emergency-solution">延单处理</span> → 店长跟客人沟通，花房及时与前场沟通</div></div>
+<div class="emergency-item"><span class="emergency-icon">✏️</span><div class="emergency-text"><span class="emergency-solution">加字控制</span> → 当天蛋糕加字控制在10个内</div></div>
+</div>
+
+<!-- 店长口诀 -->
+<div class="module">
+<div class="module-title"><span class="icon">💡</span>店长口诀</div>
+<div class="tips-box">
+<div class="tips-title">记住这16个字，节日不慌</div>
+<div class="tips-content">
+<div class="tip-line">三提前：<span class="tip-highlight">提前预热</span>、<span class="tip-highlight">提前备货</span>、<span class="tip-highlight">提前排班</span></div>
+<div class="tip-line">三紧盯：<span class="tip-highlight">紧盯出品</span>、<span class="tip-highlight">紧盯订单</span>、<span class="tip-highlight">紧盯客情</span></div>
+<div class="tip-line">三错开：取货时间错开高峰、订单压力错开时段、人员高峰错开休息</div>
+<div class="tip-line">一核心：当天出品不断、服务不乱、客诉不升</div>
+</div>
+</div>
+</div>
+
+</div>
+<div class="footer">聚满分 · {{门店名}} · {{节日}}作战计划</div>
+</body>
+</html>
