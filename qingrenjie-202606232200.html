@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>聚满分 · 节假日作战计划</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+:root { --brand-blue: #003CA5; --brand-orange: #EB6517; --bg-gray: #f5f7fa; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; background: var(--bg-gray); color: #333; line-height: 1.6; }
+.container { max-width: 1000px; margin: 0 auto; padding: 16px; }
+
+.header {
+    text-align: center; padding: 24px 16px;
+    background: linear-gradient(135deg, var(--brand-blue) 0%, #0055cc 100%);
+    color: white; border-radius: 12px; margin-bottom: 16px;
+    box-shadow: 0 4px 15px rgba(0,60,165,0.3);
+}
+.header h1 { font-size: 24px; margin-bottom: 6px; }
+.header .subtitle { opacity: 0.9; font-size: 13px; line-height: 1.6; }
+
+.card {
+    background: white; border-radius: 12px; padding: 20px; margin-bottom: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.card-title {
+    font-size: 17px; font-weight: 700; color: var(--brand-blue);
+    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 2px solid #e8f0fe;
+}
+
+.browser-tip {
+    background: #fff3e0; border: 2px solid #ff9800; border-radius: 12px;
+    padding: 14px 16px; margin-bottom: 16px; text-align: center;
+    font-size: 14px; color: #e65100; font-weight: 600;
+    box-shadow: 0 2px 8px rgba(255,152,0,0.2); position: relative;
+}
+.browser-tip-close {
+    display: inline-block; margin-top: 8px; padding: 5px 18px;
+    background: #ff9800; color: white; border: none; border-radius: 6px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+}
+
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-weight: 600; color: var(--brand-blue); margin-bottom: 5px; font-size: 13px; }
+.form-group input, .form-group textarea, .form-group select {
+    width: 100%; padding: 9px 11px; border: 1.5px solid #e0e0e0; border-radius: 8px;
+    font-size: 14px; transition: border-color 0.2s;
+}
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+    border-color: var(--brand-blue); outline: none;
+}
+
+/* 目标自动计算区域 */
+.goal-card {
+    background: linear-gradient(135deg, var(--brand-orange) 0%, #ff7b35 100%);
+    color: white; padding: 20px; border-radius: 12px; margin-bottom: 16px;
+}
+.goal-card .label { font-size: 13px; opacity: 0.9; }
+.goal-card .calc-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-top: 6px; }
+.goal-card .calc-col { flex: 1; min-width: 140px; }
+.goal-card input {
+    background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
+    color: white; font-size: 16px; font-weight: 600; padding: 8px 10px;
+    border-radius: 8px; width: 100%; margin-top: 4px;
+}
+.goal-card input::placeholder { color: rgba(255,255,255,0.7); }
+.goal-card .auto-result {
+    font-size: 28px; font-weight: 700; margin-top: 12px;
+    text-align: center; padding: 10px; background: rgba(255,255,255,0.15); border-radius: 10px;
+}
+.goal-card .auto-result .small { font-size: 13px; font-weight: 400; opacity: 0.9; }
+
+/* 产品表格 */
+.product-table { width: 100%; border-collapse: collapse; }
+.product-table th {
+    background: #e8f0fe; color: var(--brand-blue); font-size: 13px; padding: 8px;
+    text-align: left; border-radius: 6px 6px 0 0;
+}
+.product-table td { padding: 6px 8px; }
+.product-table input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+
+/* 人员排班 */
+.staff-card {
+    background: #f8f9fa; border-radius: 10px; padding: 14px;
+    border-left: 4px solid var(--brand-blue); margin-bottom: 12px;
+}
+.staff-card h4 { color: var(--brand-blue); font-size: 14px; margin-bottom: 8px; }
+.staff-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+.staff-row input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; min-width: 0; }
+.staff-row input:first-child { flex: 1; }
+.staff-row input:nth-child(2) { flex: 2; }
+
+/* 可编辑SOP列表 */
+.sop-list { display: flex; flex-direction: column; gap: 8px; }
+.sop-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 10px 12px; background: #f8f9fa; border-radius: 8px;
+}
+.sop-item input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; }
+.sop-item .editable-text {
+    flex: 1; min-width: 0; padding: 6px 8px; border: 1px dashed #ddd; border-radius: 6px;
+    font-size: 14px; line-height: 1.5; background: white; cursor: text; word-break: break-word;
+}
+.sop-item .editable-text:focus { border-color: var(--brand-blue); outline: none; background: #fff; }
+.sop-item .delete-btn {
+    background: #ffebee; color: #c62828; border: none; border-radius: 4px;
+    padding: 4px 8px; font-size: 12px; cursor: pointer; flex-shrink: 0;
+}
+
+.btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 20px; border-radius: 8px; font-size: 14px;
+    font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
+}
+.btn-primary { background: var(--brand-blue); color: white; }
+.btn-primary:hover { background: #002d7a; }
+.btn-orange { background: var(--brand-orange); color: white; }
+.btn-orange:hover { background: #d45513; }
+.btn-success { background: #27ae60; color: white; }
+.btn-small { padding: 6px 12px; font-size: 13px; }
+
+.preview-section { display: none; margin-top: 20px; }
+.preview-section.active { display: block; }
+
+.report-content { background: white; border-radius: 12px; padding: 20px; }
+.report-module { margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid #eee; }
+.report-module:last-child { border-bottom: none; }
+.report-module h3 {
+    font-size: 18px; color: var(--brand-blue); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+}
+.report-module p, .report-module li { font-size: 14px; line-height: 1.8; }
+
+.gap-alert {
+    background: #fff3e0; border-left: 4px solid var(--brand-orange);
+    padding: 14px; border-radius: 0 8px 8px 0; margin: 10px 0;
+}
+
+.action-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 18px; }
+
+#syncToast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: #4caf50; color: white; padding: 14px 28px; border-radius: 10px;
+    z-index: 9999; font-size: 15px; font-weight: 600;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2); transition: opacity 0.3s; opacity: 0;
+}
+
+@media (max-width: 768px) {
+    .container { padding: 10px; }
+    .staff-row { flex-wrap: wrap; }
+    .staff-row input { min-width: 80px; }
+    .goal-card .calc-row { flex-direction: column; }
+    .goal-card .calc-col { width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+    
+<div class="header">
+    <h1>🎯 聚满分 · 节假日作战计划</h1>
+    <div class="subtitle">
+        AI已完成基础框架，请你继续完善人员、产品、活动内容<br>
+        操作指引：填写信息 → 勾选/编辑SOP → 点击【生成完整作战计划】→ 点击【同步到钉钉表格】
+    </div>
+</div>
+
+<div class="browser-tip" id="browserTip">
+    <span style="font-size:22px;display:block;margin-bottom:6px;">📢</span>
+    <div style="line-height:1.5;font-size:13px;">
+        如在微信/钉钉内打开，请点击右上角<span style="color:#ff5722;font-size:16px;">【⋯】</span><br>
+        选择「在浏览器打开」，体验更佳
+    </div>
+    <button class="browser-tip-close" onclick="document.getElementById('browserTip').style.display='none'">知道了</button>
+</div>
+
+<!-- ========== 第一部分：基础信息 ========== -->
+<div class="card">
+    <div class="card-title">🎯 基础信息</div>
+    <div class="form-group">
+        <label>门店名称</label>
+        <input type="text" id="storeName" placeholder="如：南村店">
+    </div>
+    <div class="form-group">
+        <label>节日名称</label>
+        <input type="text" id="holidayName" placeholder="如：母亲节">
+    </div>
+    <div class="form-group">
+        <label>作战日期</label>
+        <input type="text" id="holidayDate" placeholder="如：5月12日">
+    </div>
+    
+    <!-- 目标自动计算 -->
+    <div class="goal-card">
+        <div class="label">营业额目标自动计算</div>
+        <div class="calc-row">
+            <div class="calc-col">
+                <div class="label">去年营业额（元）</div>
+                <input type="number" id="lastYearAmount" placeholder="输入去年营业额" oninput="calcTarget()">
+            </div>
+            <div class="calc-col">
+                <div class="label">目标同比增长（%）</div>
+                <input type="number" id="growthRate" placeholder="如：8" oninput="calcTarget()">
+            </div>
+        </div>
+        <div class="auto-result" id="targetResult">
+            <span class="small">目标营业额 = </span>¥______
+        </div>
+    </div>
+</div>
+
+<!-- ========== 第二部分：主推产品 ========== -->
+<div class="card">
+    <div class="card-title">🍰 主推产品</div>
+    <table class="product-table">
+        <thead><tr><th>产品名称</th><th>目标个数</th></tr></thead>
+        <tbody id="productContainer">
+            <tr><td><input type="text" class="product-name" placeholder="如：巴斯克"></td><td><input type="number" class="product-qty" placeholder="50"></td></tr>
+            <tr><td><input type="text" class="product-name" placeholder="如：母亲节款"></td><td><input type="number" class="product-qty" placeholder="230"></td></tr>
+            <tr><td><input type="text" class="product-name" placeholder="如：榴莲千层"></td><td><input type="number" class="product-qty" placeholder="40"></td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ========== 第三部分：人员排班 ========== -->
+<div class="card">
+    <div class="card-title">👥 人员排班</div>
+    
+    <div class="staff-card">
+        <h4>前场 - 早班</h4>
+        <div class="staff-row">
+            <input type="text" id="frontAmTime" placeholder="时间，如：6:00-14:00" style="flex:1;">
+        </div>
+        <div id="frontAmStaff">
+            <div class="staff-row">
+                <input type="text" class="staff-name" placeholder="姓名">
+                <input type="text" class="staff-role" placeholder="职责">
+            </div>
+        </div>
+        <button class="btn btn-primary btn-small" onclick="addStaffRow('frontAmStaff')">+ 添加人员</button>
+    </div>
+
+    <div class="staff-card">
+        <h4>前场 - 晚班</h4>
+        <div class="staff-row">
+            <input type="text" id="frontPmTime" placeholder="时间，如：14:00-22:00" style="flex:1;">
+        </div>
+        <div id="frontPmStaff">
+            <div class="staff-row">
+                <input type="text" class="staff-name" placeholder="姓名">
+                <input type="text" class="staff-role" placeholder="职责">
+            </div>
+        </div>
+        <button class="btn btn-primary btn-small" onclick="addStaffRow('frontPmStaff')">+ 添加人员</button>
+    </div>
+
+    <div class="staff-card">
+        <h4>后厨 - 早班</h4>
+        <div id="kitchenAmStaff">
+            <div class="staff-row">
+                <input type="text" class="staff-name" placeholder="姓名">
+                <input type="text" class="staff-role" placeholder="职责">
+            </div>
+        </div>
+        <button class="btn btn-primary btn-small" onclick="addStaffRow('kitchenAmStaff')">+ 添加人员</button>
+    </div>
+
+    <div class="staff-card">
+        <h4>后厨 - 晚班</h4>
+        <div id="kitchenPmStaff">
+            <div class="staff-row">
+                <input type="text" class="staff-name" placeholder="姓名">
+                <input type="text" class="staff-role" placeholder="职责">
+            </div>
+        </div>
+        <button class="btn btn-primary btn-small" onclick="addStaffRow('kitchenPmStaff')">+ 添加人员</button>
+    </div>
+
+    <div class="staff-card">
+        <h4>裱花房</h4>
+        <div class="staff-row">
+            <input type="text" id="flowerStartTime" placeholder="开工时间，如：6:00" style="flex:1;">
+        </div>
+        <div id="flowerStaff">
+            <div class="staff-row">
+                <input type="text" class="staff-name" placeholder="姓名">
+                <input type="text" class="staff-role" placeholder="职责">
+            </div>
+        </div>
+        <button class="btn btn-primary btn-small" onclick="addStaffRow('flowerStaff')">+ 添加人员</button>
+        <div class="staff-row" style="margin-top:10px;">
+            <label style="font-size:13px;color:#666;">临时工：</label>
+            <select id="tempWorker" style="width:auto;padding:6px 12px;">
+                <option value="无">无</option>
+                <option value="有">有</option>
+            </select>
+            <input type="text" id="tempWorkerDetail" placeholder="临时工安排说明" style="flex:1;display:none;">
+        </div>
+    </div>
+</div>
+
+<!-- ========== 第四部分：活动内容 ========== -->
+<div class="card">
+    <div class="card-title">📱 活动内容与预热宣传</div>
+    <div class="form-group">
+        <label>活动内容</label>
+        <textarea id="activityContent" rows="2" placeholder="如：储值200送20+蛋糕88折"></textarea>
+    </div>
+    <div class="form-group">
+        <label>朋友圈预热（门店）</label>
+        <input type="text" id="wechatStore" placeholder="提前X天，每天X条">
+    </div>
+    <div class="form-group">
+        <label>朋友圈预热（全员）</label>
+        <input type="text" id="wechatAll" placeholder="X号完成，每人发X次">
+    </div>
+    <div class="form-group">
+        <label>私信顾客</label>
+        <input type="text" id="privateMsg" placeholder="X号完成，覆盖X位顾客">
+    </div>
+    <div class="form-group">
+        <label>抖音/视频号</label>
+        <input type="text" id="douyin" placeholder="提前X天，每天X条">
+    </div>
+</div>
+
+<!-- ========== 第五部分：往年踩坑 ========== -->
+<div class="card">
+    <div class="card-title">⚠️ 往年踩过什么坑？</div>
+    <div class="form-group">
+        <textarea id="pastIssues" rows="2" placeholder="如：去年裱花房爆单，取蛋糕排队..."></textarea>
+    </div>
+</div>
+
+<!-- ========== 第六部分：前场作战SOP（可勾选可编辑） ========== -->
+<div class="card">
+    <div class="card-title">⚔️ 前场作战事项（勾选适用项，可编辑）</div>
+    <div class="sop-list" id="frontSopList">
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">订蛋糕问"最晚几点拿"，写时间段，错开高峰</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">优先推现卖，不推4寸迷你（耗时耗力利润低）</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">主推产品直接压摆卖单，不加字不丢单</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">收银主动提醒会员优惠券，引导储值</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">取蛋糕对单号+备注，白单红单放篮子</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">送货单：黑色大头笔写大字，提前1小时发给跑腿</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+    </div>
+    <button class="btn btn-primary btn-small" style="margin-top:10px;" onclick="addSopItem('frontSopList')">+ 添加事项</button>
+</div>
+
+<!-- ========== 第七部分：后厨作战SOP ========== -->
+<div class="card">
+    <div class="card-title">🔥 后厨作战事项（勾选适用项，可编辑）</div>
+    <div class="sop-list" id="kitchenSopList">
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">T-1提前烤好主推产品</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">早班主攻烤制，晚班主攻出品</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">晚班11点后安排1人协助蛋糕房</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">高峰时段增加现烤包出炉频率</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">晚班高峰期拿蛋糕时段，仔细核对订单</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+    </div>
+    <button class="btn btn-primary btn-small" style="margin-top:10px;" onclick="addSopItem('kitchenSopList')">+ 添加事项</button>
+</div>
+
+<!-- ========== 第八部分：裱花作战SOP ========== -->
+<div class="card">
+    <div class="card-title">🎂 裱花作战事项（勾选适用项，可编辑）</div>
+    <div class="sop-list" id="flowerSopList">
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">提前烤好蛋糕胚，水果备够中午用量</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">插件盘点，辅料对数</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">蛋糕柜温度正常，不定时检查</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">物料到位：胶纸/刀叉/礼盒装框</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">送货蛋糕易掉落的围胶边保护</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+    </div>
+    <button class="btn btn-primary btn-small" style="margin-top:10px;" onclick="addSopItem('flowerSopList')">+ 添加事项</button>
+</div>
+
+<!-- ========== 第九部分：突发预案（可勾选可编辑） ========== -->
+<div class="card">
+    <div class="card-title">🚨 突发预案（勾选适用项，可编辑）</div>
+    <div class="sop-list" id="emergencyList">
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">花房超产能→店长立即沟通延单/停订</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">取蛋糕排队→前台提醒"拿单或拍照"</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">裱花房爆单→外场提前电联客人沟通延迟</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">外卖爆单→及时上下架，避免超卖</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">物料不够→T-1晚三遍检查</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">人员缺岗→机动人员顶位</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+        <div class="sop-item"><input type="checkbox" checked><div class="editable-text" contenteditable="true">蛋糕柜温度异常→半成品放2楼空调直吹</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button></div>
+    </div>
+    <button class="btn btn-primary btn-small" style="margin-top:10px;" onclick="addSopItem('emergencyList')">+ 添加预案</button>
+</div>
+
+<!-- ========== 生成报告按钮 ========== -->
+<div style="text-align:center;margin:28px 0;">
+    <button class="btn btn-orange" style="padding:14px 40px;font-size:17px;" onclick="generateReport()">
+        【生成完整作战计划】
+    </button>
+</div>
+
+<!-- ========== 报告预览 ========== -->
+<div class="preview-section" id="previewSection">
+    <div class="report-content" id="reportContent" contenteditable="true"></div>
+    <div class="action-btns">
+        <button class="btn btn-primary" onclick="copyReport()">📋 复制报告</button>
+        <button class="btn btn-success" onclick="saveAsImage()">📸 保存截图</button>
+        <button class="btn btn-orange" onclick="syncToDingTalk()">【📤 同步到钉钉表格】</button>
+    </div>
+</div>
+</div>
+
+<div id="syncToast"></div>
+
+<script>
+// ========== 数据注入点（AI生成时替换）==========
+window.__HOLIDAY_DATA__ = {"holidayName":"情人节"};
+
+// ========== 目标自动计算 ==========
+function calcTarget() {
+    const lastYear = parseFloat(document.getElementById('lastYearAmount').value) || 0;
+    const rate = parseFloat(document.getElementById('growthRate').value) || 0;
+    const target = lastYear > 0 ? Math.round(lastYear * (1 + rate / 100)) : 0;
+    const resultEl = document.getElementById('targetResult');
+    if (target > 0) {
+        resultEl.innerHTML = '<span class="small">目标营业额 = </span>¥' + target.toLocaleString('zh-CN');
+    } else {
+        resultEl.innerHTML = '<span class="small">目标营业额 = </span>¥______';
+    }
+}
+
+// ========== 工具函数 ==========
+function formatMoney(n) {
+    if (!n || isNaN(n)) return '______';
+    return '¥' + parseFloat(n).toLocaleString('zh-CN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+}
+
+function addStaffRow(containerId) {
+    const container = document.getElementById(containerId);
+    const div = document.createElement('div');
+    div.className = 'staff-row';
+    div.innerHTML = '<input type="text" class="staff-name" placeholder="姓名"><input type="text" class="staff-role" placeholder="职责"><button onclick="this.parentElement.remove()" style="background:#ffebee;color:#c62828;border:none;border-radius:4px;padding:4px 8px;font-size:12px;cursor:pointer;flex-shrink:0;">删除</button>';
+    container.appendChild(div);
+}
+
+function addSopItem(listId) {
+    const list = document.getElementById(listId);
+    const div = document.createElement('div');
+    div.className = 'sop-item';
+    div.innerHTML = '<input type="checkbox" checked><div class="editable-text" contenteditable="true">点击编辑事项内容</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button>';
+    list.appendChild(div);
+}
+
+// 临时工显示/隐藏
+document.getElementById('tempWorker').addEventListener('change', function() {
+    document.getElementById('tempWorkerDetail').style.display = this.value === '有' ? 'block' : 'none';
+});
+
+// 收集SOP列表（只收集勾选的）
+function collectSopList(listId) {
+    const items = [];
+    document.querySelectorAll('#' + listId + ' .sop-item').forEach(item => {
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        const text = item.querySelector('.editable-text').textContent.trim();
+        if (checkbox.checked && text && text !== '点击编辑事项内容') {
+            items.push(text);
+        }
+    });
+    return items;
+}
+
+// ========== 生成报告 ==========
+function generateReport() {
+    const storeName = document.getElementById('storeName').value || '______';
+    const holidayName = document.getElementById('holidayName').value || '______';
+    const holidayDate = document.getElementById('holidayDate').value || '______';
+    const lastYearAmount = document.getElementById('lastYearAmount').value || '';
+    const growthRate = document.getElementById('growthRate').value || '';
+    const targetAmount = (parseFloat(lastYearAmount) > 0 && parseFloat(growthRate) > 0) 
+        ? Math.round(parseFloat(lastYearAmount) * (1 + parseFloat(growthRate) / 100)) 
+        : '';
+
+    // 收集产品
+    const products = [];
+    document.querySelectorAll('#productContainer tr').forEach(row => {
+        const name = row.querySelector('.product-name')?.value;
+        const qty = row.querySelector('.product-qty')?.value;
+        if (name) products.push({name, qty});
+    });
+
+    // 收集人员
+    function collectStaff(containerId) {
+        const staff = [];
+        document.querySelectorAll('#' + containerId + ' .staff-row').forEach(row => {
+            const name = row.querySelector('.staff-name')?.value;
+            const role = row.querySelector('.staff-role')?.value;
+            if (name) staff.push({name, role});
+        });
+        return staff;
+    }
+
+    const frontAm = collectStaff('frontAmStaff');
+    const frontPm = collectStaff('frontPmStaff');
+    const kitchenAm = collectStaff('kitchenAmStaff');
+    const kitchenPm = collectStaff('kitchenPmStaff');
+    const flower = collectStaff('flowerStaff');
+
+    const activityContent = document.getElementById('activityContent').value;
+    const wechatStore = document.getElementById('wechatStore').value;
+    const wechatAll = document.getElementById('wechatAll').value;
+    const privateMsg = document.getElementById('privateMsg').value;
+    const douyin = document.getElementById('douyin').value;
+    const pastIssues = document.getElementById('pastIssues').value;
+
+    // 收集SOP
+    const frontSop = collectSopList('frontSopList');
+    const kitchenSop = collectSopList('kitchenSopList');
+    const flowerSop = collectSopList('flowerSopList');
+    const emergency = collectSopList('emergencyList');
+
+    // 生成报告HTML
+    let reportHtml = `
+        <h2 style="text-align:center;color:#003CA5;margin-bottom:20px;">${storeName} · ${holidayName} 作战计划</h2>
+        
+        <div class="report-module">
+            <h3>🎯 基础信息</h3>
+            <p><strong>门店：</strong>${storeName}</p>
+            <p><strong>节日：</strong>${holidayName}</p>
+            <p><strong>日期：</strong>${holidayDate}</p>
+            <div class="gap-alert">
+                <p><strong>目标营业额：</strong>${formatMoney(targetAmount)}</p>
+                ${lastYearAmount ? `<p><strong>去年营业额：</strong>${formatMoney(lastYearAmount)}</p>` : ''}
+                ${growthRate ? `<p><strong>目标同比增长：</strong>${growthRate}%</p>` : ''}
+            </div>
+        </div>
+
+        <div class="report-module">
+            <h3>🍰 主推产品</h3>
+            ${products.length > 0 ? products.map((p, i) => `<p>${i+1}. <strong>${p.name}</strong>：目标 <strong>${p.qty}</strong> 个</p>`).join('') : '<p>（未填写产品）</p>'}
+        </div>
+
+        <div class="report-module">
+            <h3>👥 人员排班</h3>
+            <p><strong>前场早班</strong>（${document.getElementById('frontAmTime').value || '______'}）</p>
+            ${frontAm.length > 0 ? frontAm.map(s => `<p>• ${s.name}：${s.role}</p>`).join('') : '<p>（未填写）</p>'}
+            
+            <p><strong>前场晚班</strong>（${document.getElementById('frontPmTime').value || '______'}）</p>
+            ${frontPm.length > 0 ? frontPm.map(s => `<p>• ${s.name}：${s.role}</p>`).join('') : '<p>（未填写）</p>'}
+            
+            <p><strong>后厨早班</strong></p>
+            ${kitchenAm.length > 0 ? kitchenAm.map(s => `<p>• ${s.name}：${s.role}</p>`).join('') : '<p>（未填写）</p>'}
+            
+            <p><strong>后厨晚班</strong></p>
+            ${kitchenPm.length > 0 ? kitchenPm.map(s => `<p>• ${s.name}：${s.role}</p>`).join('') : '<p>（未填写）</p>'}
+            
+            <p><strong>裱花房</strong>（开工 ${document.getElementById('flowerStartTime').value || '______'}）</p>
+            ${flower.length > 0 ? flower.map(s => `<p>• ${s.name}：${s.role}</p>`).join('') : '<p>（未填写）</p>'}
+            <p>临时工：${document.getElementById('tempWorker').value}${document.getElementById('tempWorkerDetail').value ? '（' + document.getElementById('tempWorkerDetail').value + '）' : ''}</p>
+        </div>
+
+        <div class="report-module">
+            <h3>📱 活动内容与预热</h3>
+            ${activityContent ? `<p><strong>活动内容：</strong>${activityContent}</p>` : ''}
+            ${wechatStore ? `<p><strong>朋友圈（门店）：</strong>${wechatStore}</p>` : ''}
+            ${wechatAll ? `<p><strong>朋友圈（全员）：</strong>${wechatAll}</p>` : ''}
+            ${privateMsg ? `<p><strong>私信顾客：</strong>${privateMsg}</p>` : ''}
+            ${douyin ? `<p><strong>抖音/视频号：</strong>${douyin}</p>` : ''}
+        </div>
+
+        <div class="report-module">
+            <h3>⚠️ 往年踩坑记录</h3>
+            <p>${pastIssues || '（未填写）'}</p>
+        </div>
+
+        <div class="report-module">
+            <h3>⚔️ 前场作战事项（SOP）</h3>
+            ${frontSop.length > 0 ? frontSop.map((s, i) => `<p>${i+1}. ${s}</p>`).join('') : '<p>（未勾选）</p>'}
+        </div>
+
+        <div class="report-module">
+            <h3>🔥 后厨作战事项（SOP）</h3>
+            ${kitchenSop.length > 0 ? kitchenSop.map((s, i) => `<p>${i+1}. ${s}</p>`).join('') : '<p>（未勾选）</p>'}
+        </div>
+
+        <div class="report-module">
+            <h3>🎂 裱花作战事项（SOP）</h3>
+            ${flowerSop.length > 0 ? flowerSop.map((s, i) => `<p>${i+1}. ${s}</p>`).join('') : '<p>（未勾选）</p>'}
+        </div>
+
+        <div class="report-module">
+            <h3>🚨 突发预案</h3>
+            ${emergency.length > 0 ? emergency.map((s, i) => `<p>${i+1}. ${s}</p>`).join('') : '<p>（未勾选）</p>'}
+        </div>
+
+        <div class="report-module" style="background:linear-gradient(135deg,#003CA5,#0055cc);color:white;padding:20px;border-radius:12px;">
+            <h3 style="color:#ffd700;">💡 店长口诀</h3>
+            <p><strong>三提前：</strong>提前预热、提前备货、提前排班</p>
+            <p><strong>三紧盯：</strong>紧盯出品、紧盯订单、紧盯客情</p>
+            <p><strong>三错开：</strong>取货时间错开高峰、订单压力错开时段、人员高峰错开休息</p>
+            <p><strong>一核心：</strong>当天出品不断、服务不乱、客诉不升</p>
+        </div>
+    `;
+
+    document.getElementById('reportContent').innerHTML = reportHtml;
+
+    // 保存到URL
+    const reportData = {
+        storeName, holidayName, holidayDate, lastYearAmount, growthRate, targetAmount,
+        products, frontAm, frontPm, kitchenAm, kitchenPm, flower,
+        frontAmTime: document.getElementById('frontAmTime').value,
+        frontPmTime: document.getElementById('frontPmTime').value,
+        flowerStartTime: document.getElementById('flowerStartTime').value,
+        tempWorker: document.getElementById('tempWorker').value,
+        tempWorkerDetail: document.getElementById('tempWorkerDetail').value,
+        activityContent, wechatStore, wechatAll, privateMsg, douyin, pastIssues,
+        frontSop, kitchenSop, flowerSop, emergency
+    };
+
+    try {
+        const jsonStr = JSON.stringify(reportData);
+        const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
+        window.location.hash = 'data=' + base64;
+    } catch(e) { console.log('URL保存失败:', e); }
+
+    document.getElementById('previewSection').classList.add('active');
+    setTimeout(() => {
+        document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+}
+
+function copyReport() {
+    const text = document.getElementById('reportContent').innerText;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => alert('报告已复制！'));
+    } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('报告已复制！');
+    }
+}
+
+function saveAsImage() {
+    const el = document.getElementById('reportContent');
+    html2canvas(el, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = document.getElementById('storeName').value + '_作战计划.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        alert('截图已保存！');
+    }).catch(err => alert('截图失败：' + err.message));
+}
+
+function syncToDingTalk() {
+    const fullUrl = window.location.href;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(fullUrl).then(() => {
+            showSyncHint('✅ 完整报告链接已复制！请返回【满分学院AI助教】发送此链接，AI助手会自动同步到钉钉表格。');
+        });
+    } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = fullUrl;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showSyncHint('✅ 完整报告链接已复制！请返回【满分学院AI助教】发送此链接，AI助手会自动同步到钉钉表格。');
+    }
+}
+
+function showSyncHint(message) {
+    let toast = document.getElementById('syncToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'syncToast';
+        toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#4caf50;color:white;padding:14px 28px;border-radius:10px;z-index:9999;font-size:15px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,0.2);transition:opacity 0.3s;opacity:0;';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.style.opacity = '1';
+    setTimeout(() => { toast.style.opacity = '0'; }, 4000);
+    setTimeout(() => { toast.style.display = 'none'; }, 4300);
+}
+
+// ========== 自动保存到 localStorage ==========
+function collectAllFormData() {
+    // 收集人员（动态）
+    function collectStaff(containerId) {
+        const staff = [];
+        document.querySelectorAll('#' + containerId + ' .staff-row').forEach(row => {
+            const name = row.querySelector('.staff-name')?.value || '';
+            const role = row.querySelector('.staff-role')?.value || '';
+            staff.push({name, role});
+        });
+        return staff;
+    }
+    // 收集产品
+    const products = [];
+    document.querySelectorAll('#productContainer tr').forEach(row => {
+        const name = row.querySelector('.product-name')?.value || '';
+        const qty = row.querySelector('.product-qty')?.value || '';
+        products.push({name, qty});
+    });
+    // 收集SOP
+    function collectSop(listId) {
+        const items = [];
+        document.querySelectorAll('#' + listId + ' .sop-item').forEach(item => {
+            const checked = item.querySelector('input[type="checkbox"]')?.checked || false;
+            const text = item.querySelector('.editable-text')?.textContent?.trim() || '';
+            items.push({checked, text});
+        });
+        return items;
+    }
+    return {
+        storeName: document.getElementById('storeName').value,
+        holidayName: document.getElementById('holidayName').value,
+        holidayDate: document.getElementById('holidayDate').value,
+        lastYearAmount: document.getElementById('lastYearAmount').value,
+        growthRate: document.getElementById('growthRate').value,
+        products: products,
+        frontAmTime: document.getElementById('frontAmTime').value,
+        frontPmTime: document.getElementById('frontPmTime').value,
+        flowerStartTime: document.getElementById('flowerStartTime').value,
+        tempWorker: document.getElementById('tempWorker').value,
+        tempWorkerDetail: document.getElementById('tempWorkerDetail').value,
+        activityContent: document.getElementById('activityContent').value,
+        wechatStore: document.getElementById('wechatStore').value,
+        wechatAll: document.getElementById('wechatAll').value,
+        privateMsg: document.getElementById('privateMsg').value,
+        douyin: document.getElementById('douyin').value,
+        pastIssues: document.getElementById('pastIssues').value,
+        frontAm: collectStaff('frontAmStaff'),
+        frontPm: collectStaff('frontPmStaff'),
+        kitchenAm: collectStaff('kitchenAmStaff'),
+        kitchenPm: collectStaff('kitchenPmStaff'),
+        flower: collectStaff('flowerStaff'),
+        frontSop: collectSop('frontSopList'),
+        kitchenSop: collectSop('kitchenSopList'),
+        flowerSop: collectSop('flowerSopList'),
+        emergency: collectSop('emergencyList')
+    };
+}
+
+function saveToLocalStorage() {
+    try {
+        const data = collectAllFormData();
+        localStorage.setItem('holiday_plan_draft', JSON.stringify(data));
+        console.log('✅ 已自动保存', new Date().toLocaleTimeString());
+    } catch(e) { console.log('自动保存失败:', e); }
+}
+
+function loadFromLocalStorage() {
+    try {
+        const saved = localStorage.getItem('holiday_plan_draft');
+        if (!saved) return false;
+        const data = JSON.parse(saved);
+        if (!data.storeName && !data.holidayName && !data.lastYearAmount) return false;
+
+        // 基础信息
+        if (data.storeName) document.getElementById('storeName').value = data.storeName;
+        if (data.holidayName) document.getElementById('holidayName').value = data.holidayName;
+        if (data.holidayDate) document.getElementById('holidayDate').value = data.holidayDate;
+        if (data.lastYearAmount) document.getElementById('lastYearAmount').value = data.lastYearAmount;
+        if (data.growthRate) document.getElementById('growthRate').value = data.growthRate;
+        calcTarget();
+
+        // 产品
+        if (data.products && data.products.length > 0) {
+            const rows = document.querySelectorAll('#productContainer tr');
+            data.products.forEach((p, i) => {
+                if (rows[i]) {
+                    rows[i].querySelector('.product-name').value = p.name || '';
+                    rows[i].querySelector('.product-qty').value = p.qty || '';
+                }
+            });
+        }
+
+        // 时间、临时工
+        if (data.frontAmTime) document.getElementById('frontAmTime').value = data.frontAmTime;
+        if (data.frontPmTime) document.getElementById('frontPmTime').value = data.frontPmTime;
+        if (data.flowerStartTime) document.getElementById('flowerStartTime').value = data.flowerStartTime;
+        if (data.tempWorker) document.getElementById('tempWorker').value = data.tempWorker;
+        if (data.tempWorkerDetail) document.getElementById('tempWorkerDetail').value = data.tempWorkerDetail;
+        document.getElementById('tempWorkerDetail').style.display = (data.tempWorker === '有') ? 'block' : 'none';
+
+        // 活动内容
+        if (data.activityContent) document.getElementById('activityContent').value = data.activityContent;
+        if (data.wechatStore) document.getElementById('wechatStore').value = data.wechatStore;
+        if (data.wechatAll) document.getElementById('wechatAll').value = data.wechatAll;
+        if (data.privateMsg) document.getElementById('privateMsg').value = data.privateMsg;
+        if (data.douyin) document.getElementById('douyin').value = data.douyin;
+        if (data.pastIssues) document.getElementById('pastIssues').value = data.pastIssues;
+
+        // 恢复动态人员行
+        function restoreStaff(containerId, staffList) {
+            const container = document.getElementById(containerId);
+            // 清空现有（保留第一个模板）
+            const existing = container.querySelectorAll('.staff-row');
+            existing.forEach((row, i) => { if (i > 0) row.remove(); });
+            const firstRow = container.querySelector('.staff-row');
+            if (firstRow && staffList && staffList.length > 0) {
+                firstRow.querySelector('.staff-name').value = staffList[0].name || '';
+                firstRow.querySelector('.staff-role').value = staffList[0].role || '';
+                for (let i = 1; i < staffList.length; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'staff-row';
+                    div.innerHTML = '<input type="text" class="staff-name" placeholder="姓名" value="' + (staffList[i].name || '') + '"><input type="text" class="staff-role" placeholder="职责" value="' + (staffList[i].role || '') + '"><button onclick="this.parentElement.remove()" style="background:#ffebee;color:#c62828;border:none;border-radius:4px;padding:4px 8px;font-size:12px;cursor:pointer;flex-shrink:0;">删除</button>';
+                    container.appendChild(div);
+                }
+            }
+        }
+        restoreStaff('frontAmStaff', data.frontAm);
+        restoreStaff('frontPmStaff', data.frontPm);
+        restoreStaff('kitchenAmStaff', data.kitchenAm);
+        restoreStaff('kitchenPmStaff', data.kitchenPm);
+        restoreStaff('flowerStaff', data.flower);
+
+        // 恢复SOP（动态项）
+        function restoreSop(listId, items) {
+            if (!items || items.length === 0) return;
+            const list = document.getElementById(listId);
+            // 清空现有
+            list.innerHTML = '';
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'sop-item';
+                div.innerHTML = '<input type="checkbox" ' + (item.checked ? 'checked' : '') + '><div class="editable-text" contenteditable="true">' + (item.text || '点击编辑事项内容') + '</div><button class="delete-btn" onclick="this.parentElement.remove()">删除</button>';
+                list.appendChild(div);
+            });
+        }
+        restoreSop('frontSopList', data.frontSop);
+        restoreSop('kitchenSopList', data.kitchenSop);
+        restoreSop('flowerSopList', data.flowerSop);
+        restoreSop('emergencyList', data.emergency);
+
+        console.log('✅ 已恢复本地草稿', new Date().toLocaleTimeString());
+        return true;
+    } catch(e) { console.log('恢复草稿失败:', e); return false; }
+}
+
+// 自动保存：每30秒 + 页面关闭前
+setInterval(saveToLocalStorage, 30000);
+window.addEventListener('beforeunload', saveToLocalStorage);
+
+// 页面加载时恢复数据
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const hash = window.location.hash;
+        let hasReportData = false;
+        
+        if (hash && hash.startsWith('#data=')) {
+            const base64 = hash.replace('#data=', '');
+            const jsonStr = decodeURIComponent(escape(atob(base64)));
+            const data = JSON.parse(jsonStr);
+            hasReportData = true;
+            
+            // 填充基础信息
+            if (data.storeName) document.getElementById('storeName').value = data.storeName;
+            if (data.holidayName) document.getElementById('holidayName').value = data.holidayName;
+            if (data.holidayDate) document.getElementById('holidayDate').value = data.holidayDate;
+            if (data.lastYearAmount) document.getElementById('lastYearAmount').value = data.lastYearAmount;
+            if (data.growthRate) document.getElementById('growthRate').value = data.growthRate;
+            calcTarget();
+            
+            // 填充产品
+            if (data.products && data.products.length > 0) {
+                const rows = document.querySelectorAll('#productContainer tr');
+                data.products.forEach((p, i) => {
+                    if (rows[i]) {
+                        rows[i].querySelector('.product-name').value = p.name || '';
+                        rows[i].querySelector('.product-qty').value = p.qty || '';
+                    }
+                });
+            }
+            
+            // 填充人员（简化恢复）
+            if (data.frontAmTime) document.getElementById('frontAmTime').value = data.frontAmTime;
+            if (data.frontPmTime) document.getElementById('frontPmTime').value = data.frontPmTime;
+            if (data.flowerStartTime) document.getElementById('flowerStartTime').value = data.flowerStartTime;
+            if (data.tempWorker) document.getElementById('tempWorker').value = data.tempWorker;
+            if (data.tempWorkerDetail) document.getElementById('tempWorkerDetail').value = data.tempWorkerDetail;
+            
+            // 填充活动内容
+            if (data.activityContent) document.getElementById('activityContent').value = data.activityContent;
+            if (data.wechatStore) document.getElementById('wechatStore').value = data.wechatStore;
+            if (data.wechatAll) document.getElementById('wechatAll').value = data.wechatAll;
+            if (data.privateMsg) document.getElementById('privateMsg').value = data.privateMsg;
+            if (data.douyin) document.getElementById('douyin').value = data.douyin;
+            if (data.pastIssues) document.getElementById('pastIssues').value = data.pastIssues;
+            
+            // 恢复SOP列表（简化：不恢复具体勾选状态，只保存报告数据）
+            // SOP列表在恢复时保持默认，报告已生成后可直接编辑报告内容
+        } else {
+            // URL没有数据，尝试从localStorage恢复
+            const restored = loadFromLocalStorage();
+            if (restored) {
+                showSyncHint('✅ 已恢复上次填写的草稿！');
+            }
+        }
+        
+        // 如果AI注入了数据
+        if (window.__HOLIDAY_DATA__) {
+            const d = window.__HOLIDAY_DATA__;
+            if (d.storeName) document.getElementById('storeName').value = d.storeName;
+            if (d.holidayName) document.getElementById('holidayName').value = d.holidayName;
+            if (d.holidayDate) document.getElementById('holidayDate').value = d.holidayDate;
+            if (d.region) document.getElementById('region') && (document.getElementById('region').value = d.region);
+        }
+        
+        // 如果URL中有报告数据，自动重新生成报告
+        if (hasReportData) {
+            setTimeout(() => {
+                generateReport();
+            }, 200);
+        }
+    } catch(e) { console.log('恢复数据失败:', e); }
+});
+</script>
+</body>
+</html>
