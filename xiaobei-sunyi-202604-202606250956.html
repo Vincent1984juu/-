@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>聚满分 · 门店损益AI分析工具</title>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: #f5f7fa; color: #333; line-height: 1.6;
+        }
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .header {
+            text-align: center; padding: 30px 0;
+            background: linear-gradient(135deg, #003CA5 0%, #0055cc 100%);
+            color: white; border-radius: 12px; margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(0,60,165,0.3);
+        }
+        .header h1 { font-size: 26px; margin-bottom: 8px; }
+        .header p { opacity: 0.9; font-size: 14px; }
+
+        .card {
+            background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .card-title {
+            font-size: 18px; font-weight: 700; color: #003CA5;
+            margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #e8f0fe;
+        }
+
+        .ai-badge {
+            display: inline-block; background: linear-gradient(135deg, #e8f0ff 0%, #d0e0ff 100%);
+            color: #003CA5; padding: 4px 12px; border-radius: 20px; font-size: 12px;
+            font-weight: 600; margin-bottom: 12px;
+        }
+
+        .browser-tip {
+            background: #fff3e0; border: 2px solid #ff9800; border-radius: 12px;
+            padding: 16px 20px; margin-bottom: 20px; text-align: center;
+            font-size: 15px; color: #e65100; font-weight: 600;
+            box-shadow: 0 2px 8px rgba(255,152,0,0.2);
+        }
+        .browser-tip-close {
+            display: inline-block; margin-top: 10px; padding: 6px 20px;
+            background: #ff9800; color: white; border: none; border-radius: 6px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+        }
+        .browser-tip-close:hover { background: #f57c00; }
+
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .table-wrapper table { min-width: 600px; }
+
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+        .data-table th, .data-table td { padding: 10px 8px; text-align: center; border: 1px solid #e0e0e0; }
+        .data-table th { background: #f0f7ff; color: #003CA5; font-weight: 600; }
+        .data-table td { background: white; }
+        .data-table .gap-negative { color: #e53935; font-weight: 600; }
+        .data-table .gap-positive { color: #43a047; font-weight: 600; }
+        .data-table .cell-highlight { background: #fff8e1; }
+        .data-table td:first-child { text-align: left; font-weight: 600; }
+
+        .summary-box {
+            background: #f5f7fa; border-radius: 8px; padding: 16px; margin-top: 16px;
+            font-size: 14px; line-height: 2;
+        }
+        .summary-box .key-point { color: #e53935; font-weight: 600; }
+        .summary-box .opportunity { color: #43a047; font-weight: 600; }
+
+        .root-cause-section { margin-bottom: 20px; }
+        .root-cause-category {
+            background: #f0f7ff; border-left: 4px solid #003CA5;
+            padding: 12px 16px; margin-bottom: 10px; font-weight: 600; color: #003CA5;
+            border-radius: 0 8px 8px 0;
+        }
+        .root-cause-subtitle {
+            font-weight: 600; color: #333; margin: 10px 0 8px 16px; font-size: 14px;
+        }
+        .root-cause-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding-left: 16px; }
+        .root-cause-option {
+            padding: 10px 14px; background: white; border: 1.5px solid #e0e0e0;
+            border-radius: 8px; cursor: pointer; font-size: 13px;
+            transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+        }
+        .root-cause-option:hover { border-color: #003CA5; }
+        .root-cause-option.selected { border-color: #003CA5; background: #e8f0fe; }
+        .root-cause-option .check-icon { width: 18px; height: 18px; border-radius: 4px; border: 2px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; color: transparent; transition: all 0.2s; flex-shrink: 0; }
+        .root-cause-option.selected .check-icon { background: #003CA5; border-color: #003CA5; color: white; }
+        .root-cause-option .editable-text { flex: 1; outline: none; }
+        .root-cause-option .editable-text:focus { background: #fff8e1; padding: 2px 4px; border-radius: 4px; }
+
+        .add-root-btn {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 6px 12px; background: #e8f0fe; color: #003CA5;
+            border: 1px dashed #003CA5; border-radius: 6px;
+            font-size: 12px; cursor: pointer; margin: 8px 0 8px 16px;
+        }
+        .add-root-btn:hover { background: #d0e0fc; }
+
+        .action-plan-item {
+            background: white; border: 1.5px solid #e0e0e0; border-radius: 10px;
+            padding: 16px; margin-bottom: 12px;
+        }
+        .action-plan-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .action-plan-title { font-weight: 600; color: #003CA5; font-size: 15px; }
+        .action-plan-body { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .action-plan-body .form-group { margin-bottom: 0; }
+        .action-plan-body .form-group input { font-size: 13px; padding: 8px 10px; border: 1.5px solid #e0e0e0; border-radius: 8px; width: 100%; }
+        .action-plan-body .form-group label { font-size: 12px; color: #666; margin-bottom: 4px; display: block; }
+
+        .form-group { display: flex; flex-direction: column; }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 10px 12px; border: 1.5px solid #e0e0e0; border-radius: 8px;
+            font-size: 14px; font-family: inherit; background: #fafafa;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: #003CA5; background: white;
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: 600;
+            cursor: pointer; border: none; transition: all 0.2s;
+        }
+        .btn-primary { background: #003CA5; color: white; box-shadow: 0 4px 12px rgba(0,60,165,0.3); }
+        .btn-primary:hover { background: #002a7a; transform: translateY(-2px); }
+        .btn-secondary { background: #e8f0fe; color: #003CA5; border: 1px solid #cce0ff; }
+        .btn-secondary:hover { background: #d0e0fc; }
+        .btn-group { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
+
+        .diagnosis-box { background: #fff3e0; border: 2px solid #ff9800; border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+        .diagnosis-title { font-weight: 700; color: #e65100; margin-bottom: 12px; }
+        .diagnosis-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .diagnosis-option {
+            padding: 12px 16px; background: white; border: 2px solid #e0e0e0;
+            border-radius: 8px; cursor: pointer; font-size: 14px; text-align: center; transition: all 0.2s;
+        }
+        .diagnosis-option:hover { border-color: #003CA5; }
+        .diagnosis-option.selected { border-color: #003CA5; background: #e8f0fe; color: #003CA5; font-weight: 600; }
+
+        .call-to-action {
+            background: linear-gradient(135deg, #e8f0ff 0%, #f0f7ff 100%);
+            border: 2px solid #003CA5; border-radius: 10px;
+            padding: 20px; margin-top: 20px; text-align: center;
+        }
+        .call-to-action p { font-size: 15px; color: #003CA5; font-weight: 600; margin-bottom: 8px; }
+        .call-to-action .sub { font-size: 13px; color: #666; font-weight: normal; }
+
+        #previewSection { display: none; margin-top: 24px; }
+        #previewSection.active { display: block; }
+        .preview-content { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        .preview-content h2 { text-align: center; color: #003CA5; margin-bottom: 24px; font-size: 22px; }
+        .preview-content .section { margin-bottom: 20px; }
+        .preview-content .section-title { font-weight: 700; font-size: 16px; color: #003CA5; margin-bottom: 10px; padding-bottom: 6px; }
+
+        .target-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .warning-box { background: #ffebee; border: 2px solid #e53935; border-radius: 8px; padding: 12px 16px; margin: 12px 0; color: #c62828; font-weight: 600; }
+
+        @media (max-width: 640px) {
+            .root-cause-options, .diagnosis-options { grid-template-columns: 1fr; }
+            .action-plan-body { grid-template-columns: 1fr; }
+            .data-table { font-size: 11px; }
+            .data-table th, .data-table td { padding: 6px 4px; }
+            .target-grid { grid-template-columns: 1fr !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 聚满分 · 门店损益AI分析工具</h1>
+            <p>AI已完成损益数据分析，请你继续完成：诊断类型 → 根源分析 → 降本增效方案 → 目标制定 → 生成报告 → 同步到钉钉</p>
+        </div>
+
+        <div class="browser-tip" id="browserTip">
+            <span style="font-size:24px;display:block;margin-bottom:8px;">📢</span>
+            <div>
+                如在微信/钉钉内打开，请点击右上角<span style="color:#ff5722;font-size:18px;">【⋯】</span><br>
+                选择「在浏览器打开」，体验更佳<br>
+                <span style="font-size:13px;color:#e65100;font-weight:normal;">如遇页面显示错误或"等待数据"，请关闭后稍等30秒重新打开</span>
+            </div>
+            <button class="browser-tip-close" onclick="document.getElementById('browserTip').style.display='none'">知道了</button>
+        </div>
+
+        <!-- ========== 第一部分:AI自动生成损益分析 ========== -->
+        <div class="card">
+            <div class="ai-badge">🤖 AI 已根据提供数据自动分析</div>
+            <div class="card-title">📊 损益分析结果</div>
+            <div id="aiAnalysisContent">
+                <p style="color:#999;text-align:center;padding:40px 0;">等待数据...</p>
+            </div>
+        </div>
+
+        <!-- ========== 第二部分:店长填写 ========== -->
+        <div class="card">
+            <div class="card-title">🎯 第一步：诊断类型</div>
+            <p style="font-size:13px;color:#666;margin-bottom:16px;">根据AI分析结果，选择最符合本门店利润状况的诊断类型：</p>
+            <div class="diagnosis-box">
+                <div class="diagnosis-title">请选择诊断类型（单选）</div>
+                <div class="diagnosis-options" id="diagnosisType">
+                    <div class="diagnosis-option" onclick="selectDiagnosis(this)">毛利率问题（折后毛利率低于预算）</div>
+                    <div class="diagnosis-option" onclick="selectDiagnosis(this)">费用超标（人工/水电/低耗等占比较高）</div>
+                    <div class="diagnosis-option" onclick="selectDiagnosis(this)">收入不足（营业额未达标，折扣过大）</div>
+                    <div class="diagnosis-option" onclick="selectDiagnosis(this)">综合问题（多项指标均异常）</div>
+                    <div class="diagnosis-option" onclick="selectDiagnosis(this)">利润达标（探讨进一步提升机会）</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">🔍 第二步：利润差距根源分析</div>
+            <p style="font-size:13px;color:#666;margin-bottom:16px;">按"利润=收入-成本-费用"框架分类。点击选择符合本门店情况的根源(可多选)，双击文字可编辑：</p>
+
+            <div class="root-cause-section" id="sectionRevenue">
+                <div class="root-cause-category">一、收入问题（营业额不足/折扣过大）</div>
+                <div class="root-cause-subtitle">1. 营业额未达标</div>
+                <div class="root-cause-options" id="rc-revenue-1">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">来客数低于预算，门店引流不到位</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">客单价低于预算，连带销售不足</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">高毛利品类（蛋糕/甜品）占比下滑</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">外卖/抖音渠道占比异常，平台扣点高</span></div>
+                </div>
+                <button class="add-root-btn" onclick="addRootCause('rc-revenue-1')">+ 添加根源</button>
+
+                <div class="root-cause-subtitle">2. 折扣侵蚀利润</div>
+                <div class="root-cause-options" id="rc-revenue-2">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">折前毛利率与折后毛利率差距过大</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">折扣超预算，平台活动被迫参加</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">门店自身促销过度（买赠/满减）</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">滞销产品临期打折处理过多</span></div>
+                </div>
+                <button class="add-root-btn" onclick="addRootCause('rc-revenue-2')">+ 添加根源</button>
+            </div>
+
+            <div class="root-cause-section" id="sectionCost">
+                <div class="root-cause-category">二、成本问题（毛利率偏低）</div>
+                <div class="root-cause-subtitle">3. 原料成本偏高</div>
+                <div class="root-cause-options" id="rc-cost-1">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">应产率不达标，出品重量/尺寸偏差</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">报废率高，订货预估不准导致积压</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">出品标准执行不到位，损耗大</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">期初库存管理不善，库存积压</span></div>
+                </div>
+                <button class="add-root-btn" onclick="addRootCause('rc-cost-1')">+ 添加根源</button>
+
+                <div class="root-cause-subtitle">4. 产品结构问题</div>
+                <div class="root-cause-options" id="rc-cost-2">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">低毛利产品占比高，高毛利产品未主推</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">蛋糕/甜品等高毛利品类销售下滑</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">新品定价过低或毛利测算不准</span></div>
+                </div>
+                <button class="add-root-btn" onclick="addRootCause('rc-cost-2')">+ 添加根源</button>
+            </div>
+
+            <div class="root-cause-section" id="sectionExpense">
+                <div class="root-cause-category">三、费用问题（各项费用占比超标）</div>
+                <div class="root-cause-subtitle">5. 人工费用超标</div>
+                <div class="root-cause-options" id="rc-expense-1">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">人员编制冗余，排班未按客流调整</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">协店工资/奖金未与业绩挂钩，固定支出高</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">人效低，营业额下降但工资未同步调整</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">社保/福利/宿舍等隐性成本增加</span></div>
+                </div>
+                <button class="add-root-btn" onclick="addRootCause('rc-expense-1')">+ 添加根源</button>
+
+                <div class="root-cause-subtitle">6. 水电/低耗/维修费超标</div>
+                <div class="root-cause-options" id="rc-expense-2">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">水电费占比超预算，设备老化/使用习惯差</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">低值易耗品浪费严重（裱花袋/手套/垫纸）</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">维修费异常增长，缺乏预防性维护计划</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">宣传物料投入产出比低，未带来客流增长</span></div>
+                </div>
+                <button class="add-root-btn" onclick="addRootCause('rc-expense-2')">+ 添加根源</button>
+
+                <div class="root-cause-subtitle">7. 其他费用异常</div>
+                <div class="root-cause-options" id="rc-expense-3">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">办公费/电话费异常波动</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">配送运费占比过高，订货批量不合理</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">差旅费/培训费超预算</span></div>
+                </div>
+                <button class="add-root-btn" onclick="addRootCause('rc-expense-3')">+ 添加根源</button>
+            </div>
+
+            <div class="root-cause-section" id="sectionProfit">
+                <div class="root-cause-category">四、利润问题（可控利润/净利润未达标）</div>
+                <div class="root-cause-options" id="rc-profit-1">
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">可控利润低于预算，收入-成本-费用多项异常</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">净利润率低于预算/同区域均值</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">不可控费用（租金/品牌费）占比过高</span></div>
+                    <div class="root-cause-option" onclick="toggleRootCause(this)"><span class="check-icon">✓</span><span class="editable-text" contenteditable="true">财务费用/税费异常增加</span></div>
+                </div>
+                <button class="add-root-btn" onclick="addRootCause('rc-profit-1')">+ 添加根源</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📋 第三步：降本增效方案</div>
+            <p style="font-size:13px;color:#666;margin-bottom:16px;">针对勾选根源，制定具体可落地的改善方案：</p>
+            <div id="actionPlanContainer">
+                <!-- 动态添加 -->
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="addActionItem()">+ 添加行动方案</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">🎯 第四步：下月目标</div>
+            <p style="font-size:13px;color:#666;margin-bottom:16px;">设定下月可量化的损益改善目标：</p>
+            <div class="target-grid" id="targetContainer">
+                <div class="form-group">
+                    <label>折后毛利率目标 (%)</label>
+                    <input type="number" class="target-input" placeholder="如: 48.0">
+                </div>
+                <div class="form-group">
+                    <label>人工成本占比目标 (%)</label>
+                    <input type="number" class="target-input" placeholder="如: 16.0">
+                </div>
+                <div class="form-group">
+                    <label>可控利润目标 (元)</label>
+                    <input type="number" class="target-input" placeholder="如: 100000">
+                </div>
+                <div class="form-group">
+                    <label>净利润目标 (元)</label>
+                    <input type="number" class="target-input" placeholder="如: 80000">
+                </div>
+                <div class="form-group">
+                    <label>折扣率控制目标 (%)</label>
+                    <input type="number" class="target-input" placeholder="如: 5.0">
+                </div>
+                <div class="form-group">
+                    <label>高毛利品类占比目标 (%)</label>
+                    <input type="number" class="target-input" placeholder="如: 45.0">
+                </div>
+            </div>
+            <div class="btn-group" style="margin-top:16px;">
+                <button class="btn btn-secondary" onclick="addTarget()">+ 添加自定义目标</button>
+            </div>
+        </div>
+
+        <div class="call-to-action">
+            <p>✨ 填写完成后，点击下方按钮生成完整分析报告</p>
+            <p class="sub">报告内容可点击直接编辑，生成后自动保存到链接</p>
+            <div class="btn-group" style="margin-top:16px;">
+                <button class="btn btn-primary" onclick="generateReport()">📄 生成完整分析报告</button>
+            </div>
+        </div>
+
+        <!-- ========== 报告预览区 ========== -->
+        <div id="previewSection">
+            <div class="card" style="border: 2px solid #003CA5;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                    <div class="card-title" style="margin-bottom:0;border-bottom:none;padding-bottom:0;">📄 月度损益分析报告</div>
+                    <div class="btn-group" style="margin-top:0;">
+                        <button class="btn btn-secondary" onclick="copyReport()" style="padding:8px 16px;font-size:13px;">📋 复制内容</button>
+                        <button class="btn btn-secondary" onclick="printReport()" style="padding:8px 16px;font-size:13px;">🖨️ 打印</button>
+                        <button class="btn btn-secondary" onclick="screenshotReport()" style="padding:8px 16px;font-size:13px;">📸 截图保存</button>
+                    </div>
+                </div>
+                <div id="previewContent" class="preview-content"></div>
+                <div class="btn-group" style="margin-top:20px;">
+                    <button class="btn btn-primary" onclick="syncToDingTalk()">📤 同步到钉钉表格</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 数据初始化 ==========
+        let actionItemCount = 0;
+        let selectedDiagnosis = '';
+
+        function initData() {
+            const data = window.__AI_DATA__;
+            if (!data) {
+                console.warn('AI数据未加载');
+                return;
+            }
+            console.log('初始化数据:', data);
+            renderAIAnalysis(data);
+        }
+
+        // ========== AI分析渲染 ==========
+        function renderAIAnalysis(data) {
+            const container = document.getElementById('aiAnalysisContent');
+            
+            // 计算差异
+            const revenueGap = data.revenueAfterDiscount - data.budgetRevenue;
+            const grossMarginGap = data.grossMarginAfter - data.budgetGrossMargin;
+            const laborGap = data.laborCostPct - data.budgetLaborCostPct;
+            const netProfitGap = data.netProfit - data.budgetNetProfit;
+            const netProfitMarginGap = data.netProfitMargin - data.budgetNetProfitMargin;
+            const discountRate = data.revenueBeforeDiscount > 0 ? (data.discountAmount / data.revenueBeforeDiscount * 100).toFixed(1) : 0;
+            const budgetDiscountRate = 5.0; // 假设预算折扣率5%
+            
+            // 判断异常指标
+            let warnings = [];
+            if (data.grossMarginAfter < data.budgetGrossMargin) warnings.push(`折后毛利率${data.grossMarginAfter}%低于预算${data.budgetGrossMargin}%`);
+            if (data.laborCostPct > data.budgetLaborCostPct) warnings.push(`人工占比${data.laborCostPct}%超预算${data.budgetLaborCostPct}%`);
+            if (data.netProfitMargin < data.budgetNetProfitMargin) warnings.push(`净利率${data.netProfitMargin}%低于预算${data.budgetNetProfitMargin}%`);
+            if (discountRate > budgetDiscountRate) warnings.push(`折扣率${discountRate}%超预算${budgetDiscountRate}%`);
+            if (data.utilitiesPct > 3.0) warnings.push(`水电占比${data.utilitiesPct}%偏高`);
+            if (data.grossMarginBefore > data.grossMarginAfter + 5) warnings.push(`折前毛利率${data.grossMarginBefore}%与折后毛利率${data.grossMarginAfter}%差距超过5个百分点，折扣侵蚀利润严重`);
+            
+            let warningHtml = '';
+            if (warnings.length > 0) {
+                warningHtml = `<div class="warning-box">⚠️ 异常指标：${warnings.join('；')}</div>`;
+            }
+            
+            // 核心差距描述
+            let gapDesc = '';
+            if (data.grossMarginAfter < data.budgetGrossMargin) {
+                gapDesc += `【毛利率问题】折后毛利率${data.grossMarginAfter}%低于预算${data.budgetGrossMargin}%，差距${(data.budgetGrossMargin - data.grossMarginAfter).toFixed(1)}个百分点。`;
+                if (data.grossMarginBefore > data.grossMarginAfter + 3) {
+                    gapDesc += `折前毛利率${data.grossMarginBefore}%，折扣吃掉了${(data.grossMarginBefore - data.grossMarginAfter).toFixed(1)}个百分点。`;
+                }
+                gapDesc += '需重点分析原料成本控制和折扣策略。';
+            } else if (data.laborCostPct > data.budgetLaborCostPct) {
+                gapDesc += `【费用问题】人工占比${data.laborCostPct}%超预算${data.budgetLaborCostPct}%，人员编制或排班效率需优化。`;
+            } else if (data.netProfitMargin < data.budgetNetProfitMargin) {
+                gapDesc += `【利润问题】净利率${data.netProfitMargin}%低于预算${data.budgetNetProfitMargin}%，收入-成本-费用需全面排查。`;
+            } else {
+                gapDesc = '本月利润指标整体达标，可进一步探讨提升空间。';
+            }
+            
+            // 保存核心差距描述供报告使用
+            window._aiGapDesc = gapDesc;
+
+            container.innerHTML = `
+                ${warningHtml}
+                
+                <div class="summary-box">
+                    <p><strong>【门店】</strong>${data.storeName || '______'} | <strong>【区域】</strong>${data.region || '______'} | <strong>【月份】</strong>${data.month || '______'}</p>
+                </div>
+
+                <div class="card-title" style="margin-top:20px;">📊 损益总览</div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>项目</th><th>实际</th><th>预算</th><th>差异</th><th>达成率</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>折前营业额</td>
+                                <td>${formatMoney(data.revenueBeforeDiscount)}</td>
+                                <td>${formatMoney(data.budgetRevenue)}</td>
+                                <td class="${revenueGap >= 0 ? 'gap-positive' : 'gap-negative'}">${revenueGap >= 0 ? '+' : ''}${formatMoney(revenueGap)}</td>
+                                <td class="${data.budgetRevenue > 0 ? (data.revenueAfterDiscount >= data.budgetRevenue ? 'gap-positive' : 'gap-negative') : ''}">${data.budgetRevenue > 0 ? (data.revenueAfterDiscount / data.budgetRevenue * 100).toFixed(1) + '%' : '-'}</td>
+                            </tr>
+                            <tr>
+                                <td>折后实收</td>
+                                <td>${formatMoney(data.revenueAfterDiscount)}</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>折扣金额</td>
+                                <td class="gap-negative">${formatMoney(data.discountAmount)}</td>
+                                <td>${formatMoney(data.budgetRevenue * 0.05)}</td>
+                                <td class="gap-negative">+${formatMoney(data.discountAmount - data.budgetRevenue * 0.05)}</td>
+                                <td class="gap-negative">${(data.discountAmount / (data.budgetRevenue * 0.05) * 100).toFixed(1)}%</td>
+                            </tr>
+                            <tr>
+                                <td>营业成本</td>
+                                <td>${formatMoney(data.costOfGoods)}</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>毛利额</td>
+                                <td>${formatMoney(data.grossProfit)}</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            <tr class="cell-highlight">
+                                <td><strong>折前毛利率</strong></td>
+                                <td><strong>${data.grossMarginBefore}%</strong></td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            <tr class="cell-highlight">
+                                <td><strong>折后毛利率</strong></td>
+                                <td class="${grossMarginGap >= 0 ? 'gap-positive' : 'gap-negative'}"><strong>${data.grossMarginAfter}%</strong></td>
+                                <td><strong>${data.budgetGrossMargin}%</strong></td>
+                                <td class="${grossMarginGap >= 0 ? 'gap-positive' : 'gap-negative'}">${grossMarginGap >= 0 ? '+' : ''}${grossMarginGap.toFixed(1)}%</td>
+                                <td class="${grossMarginGap >= 0 ? 'gap-positive' : 'gap-negative'}">${(data.grossMarginAfter / data.budgetGrossMargin * 100).toFixed(1)}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-title" style="margin-top:20px;">💰 费用结构</div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>费用项目</th><th>金额</th><th>占营业额%</th><th>预算%</th><th>差异</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr class="${data.laborCostPct > data.budgetLaborCostPct ? 'cell-highlight' : ''}">
+                                <td>人工成本</td>
+                                <td>${formatMoney(data.laborCost)}</td>
+                                <td class="${data.laborCostPct > data.budgetLaborCostPct ? 'gap-negative' : ''}">${data.laborCostPct}%</td>
+                                <td>${data.budgetLaborCostPct}%</td>
+                                <td class="${laborGap > 0 ? 'gap-negative' : 'gap-positive'}">${laborGap > 0 ? '+' : ''}${laborGap.toFixed(1)}%</td>
+                            </tr>
+                            <tr>
+                                <td>水电费</td>
+                                <td>${formatMoney(data.utilities)}</td>
+                                <td>${data.utilitiesPct}%</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>低值易耗品</td>
+                                <td>${formatMoney(data.lowValueConsumables)}</td>
+                                <td>${data.lowValueConsumablesPct}%</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>维修费</td>
+                                <td>${formatMoney(data.repairCost)}</td>
+                                <td>${data.repairCostPct}%</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>宣传费</td>
+                                <td>${formatMoney(data.advertising)}</td>
+                                <td>${data.advertisingPct}%</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>办公费</td>
+                                <td>${formatMoney(data.officeExpense)}</td>
+                                <td>${data.officeExpensePct}%</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>配送运费</td>
+                                <td>${formatMoney(data.deliveryFee)}</td>
+                                <td>${data.deliveryFeePct}%</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>租金</td>
+                                <td>${formatMoney(data.rent)}</td>
+                                <td>${data.rentPct}%</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>品牌管理费</td>
+                                <td>${formatMoney(data.brandFee)}</td>
+                                <td>${data.brandFeePct}%</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-title" style="margin-top:20px;">📈 利润结构</div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>项目</th><th>实际</th><th>预算</th><th>差异</th><th>达成率</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>可控利润</td>
+                                <td>${formatMoney(data.controllableProfit)}</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            <tr>
+                                <td>可控利润率</td>
+                                <td>${data.controllableProfitPct}%</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            <tr class="cell-highlight">
+                                <td><strong>净利润</strong></td>
+                                <td class="${netProfitGap >= 0 ? 'gap-positive' : 'gap-negative'}"><strong>${formatMoney(data.netProfit)}</strong></td>
+                                <td><strong>${formatMoney(data.budgetNetProfit)}</strong></td>
+                                <td class="${netProfitGap >= 0 ? 'gap-positive' : 'gap-negative'}">${netProfitGap >= 0 ? '+' : ''}${formatMoney(netProfitGap)}</td>
+                                <td class="${netProfitGap >= 0 ? 'gap-positive' : 'gap-negative'}">${(data.netProfit / data.budgetNetProfit * 100).toFixed(1)}%</td>
+                            </tr>
+                            <tr class="cell-highlight">
+                                <td><strong>净利率</strong></td>
+                                <td class="${netProfitMarginGap >= 0 ? 'gap-positive' : 'gap-negative'}"><strong>${data.netProfitMargin}%</strong></td>
+                                <td><strong>${data.budgetNetProfitMargin}%</strong></td>
+                                <td class="${netProfitMarginGap >= 0 ? 'gap-positive' : 'gap-negative'}">${netProfitMarginGap >= 0 ? '+' : ''}${netProfitMarginGap.toFixed(1)}%</td>
+                                <td class="${netProfitMarginGap >= 0 ? 'gap-positive' : 'gap-negative'}">${(data.netProfitMargin / data.budgetNetProfitMargin * 100).toFixed(1)}%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-title" style="margin-top:20px;">🎯 核心差距分析</div>
+                <div class="summary-box">
+                    <p>${gapDesc}</p>
+                </div>
+
+                ${data.categories && data.categories.length > 0 ? `
+                <div class="card-title" style="margin-top:20px;">📦 品类收入结构</div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead><tr><th style="text-align:left;">品类</th><th>金额</th><th>占比</th></tr></thead>
+                        <tbody>
+                            ${data.categories.map(c => `<tr><td style="text-align:left;font-weight:600;">${c.name}</td><td>${formatMoney(c.amount)}</td><td>${c.pct}%</td></tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                ` : ''}
+            `;
+        }
+
+        // ========== 工具函数 ==========
+        function formatMoney(n) {
+            if (n === undefined || n === null) return '¥0';
+            return '¥' + n.toLocaleString();
+        }
+
+        function formatPct(n) {
+            if (n === undefined || n === null) return '-';
+            return (n >= 0 ? '+' : '') + n.toFixed(1) + '%';
+        }
+
+        function calcChange(current, previous) {
+            if (!previous || previous === 0) return 0;
+            return ((current - previous) / previous) * 100;
+        }
+
+        // ========== 交互逻辑 ==========
+        function selectDiagnosis(el) {
+            document.querySelectorAll('.diagnosis-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedDiagnosis = el.textContent;
+        }
+
+        function toggleRootCause(el) {
+            el.classList.toggle('selected');
+        }
+
+        function addRootCause(containerId) {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = 'root-cause-option';
+            div.onclick = function() { toggleRootCause(this); };
+            div.innerHTML = '<span class="check-icon">✓</span><span class="editable-text" contenteditable="true">点击编辑根源描述</span>';
+            container.appendChild(div);
+        }
+
+        function addTarget(label, value) {
+            const container = document.getElementById('targetContainer');
+            const div = document.createElement('div');
+            div.className = 'form-group';
+            div.innerHTML = `
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                    <input type="text" class="target-label-input" placeholder="目标名称" value="${label || ''}" style="flex:1;font-size:13px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;">
+                    <button onclick="this.closest('.form-group').remove()" style="background:#ffebee;color:#c62828;border:none;border-radius:4px;padding:4px 8px;font-size:12px;cursor:pointer;">删除</button>
+                </div>
+                <input type="number" class="target-input" placeholder="输入目标值" value="${value || ''}">
+            `;
+            container.appendChild(div);
+        }
+
+        function addActionItem() {
+            actionItemCount++;
+            const container = document.getElementById('actionPlanContainer');
+            const div = document.createElement('div');
+            div.className = 'action-plan-item';
+            div.innerHTML = `
+                <div class="action-plan-header">
+                    <span class="action-plan-title">行动${actionItemCount}</span>
+                    <button class="btn btn-secondary" style="padding:4px 12px;font-size:12px;" onclick="this.closest('.action-plan-item').remove()">删除</button>
+                </div>
+                <div class="action-plan-body">
+                    <div class="form-group"><label>具体行动</label><input type="text" class="action-desc" placeholder="如：严控出品重量，每日抽查3次"></div>
+                    <div class="form-group"><label>负责人</label><input type="text" class="action-owner" placeholder="如：后厨主管"></div>
+                    <div class="form-group"><label>完成时间</label><input type="text" class="action-deadline" placeholder="如：7月15日前"></div>
+                    <div class="form-group"><label>衡量标准</label><input type="text" class="action-metric" placeholder="如：应产率达标率95%以上"></div>
+                    <div class="form-group"><label>目标结果</label><input type="text" class="action-target" placeholder="如：毛利率提升2个百分点"></div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        // ========== 生成报告 ==========
+        function generateReport() {
+            const data = window.__AI_DATA__;
+            if (!data) {
+                alert('数据未加载，请刷新页面重试');
+                return;
+            }
+
+            const revenueGap = data.revenueAfterDiscount - data.budgetRevenue;
+            const grossMarginGap = data.grossMarginAfter - data.budgetGrossMargin;
+            const laborGap = data.laborCostPct - data.budgetLaborCostPct;
+            const netProfitGap = data.netProfit - data.budgetNetProfit;
+            const netProfitMarginGap = data.netProfitMargin - data.budgetNetProfitMargin;
+            const discountRate = data.revenueBeforeDiscount > 0 ? (data.discountAmount / data.revenueBeforeDiscount * 100).toFixed(1) : 0;
+
+            // 核心差距描述
+            let gapDesc = window._aiGapDesc || '';
+            if (!gapDesc) {
+                gapDesc = '(核心差距分析未生成，请刷新页面重试)';
+            }
+
+            // 诊断类型
+            let diagnosisHtml = selectedDiagnosis || '(未选择诊断类型)';
+
+            // 根源
+            const selectedRootCauseEls = document.querySelectorAll('.root-cause-option.selected');
+            const currentRootCauses = Array.from(selectedRootCauseEls).map(el => {
+                const textEl = el.querySelector('.editable-text');
+                return textEl ? textEl.textContent.trim() : '';
+            }).filter(t => t && t !== '点击编辑根源描述');
+            let rootCausesHtml = currentRootCauses.length > 0
+                ? currentRootCauses.map(r => `• ${r}`).join('<br>')
+                : '(未选择根源)';
+
+            // 行动计划
+            let actionsHtml = '';
+            document.querySelectorAll('.action-plan-item').forEach((item, index) => {
+                const desc = item.querySelector('.action-desc').value || '______';
+                const owner = item.querySelector('.action-owner').value || '______';
+                const deadline = item.querySelector('.action-deadline').value || '______';
+                const metric = item.querySelector('.action-metric').value || '______';
+                const target = item.querySelector('.action-target').value || '______';
+                actionsHtml += `
+                    <div class="section">
+                        <div class="section-title">【动作${index + 1}】${desc}</div>
+                        <p>负责人：${owner} | 完成时间：${deadline}</p>
+                        <p>衡量标准：${metric} | 目标结果：${target}</p>
+                    </div>
+                `;
+            });
+            if (!actionsHtml) actionsHtml = '<p>(未填写行动计划)</p>';
+
+            // 下月目标
+            let targetHtml = '';
+            document.querySelectorAll('#targetContainer .form-group').forEach(group => {
+                const labelInput = group.querySelector('.target-label-input');
+                const label = labelInput ? labelInput.value : group.querySelector('label')?.textContent || '目标';
+                const input = group.querySelector('.target-input');
+                const value = input ? input.value : '';
+                if (value) {
+                    targetHtml += `
+                        <tr>
+                            <td style="font-weight:600;">${label}</td>
+                            <td class="gap-positive" style="font-size:18px;">${value}</td>
+                        </tr>
+                    `;
+                }
+            });
+            if (!targetHtml) targetHtml = '<tr><td colspan="2" style="color:#999;">(未填写目标)</td></tr>';
+
+            // 生成报告HTML
+            const previewContent = document.getElementById('previewContent');
+            previewContent.innerHTML = `
+                <h2 style="text-align:center;color:#003CA5;margin-bottom:24px;">月度损益分析报告</h2>
+
+                <div class="section">
+                    <div class="section-title">📋 基础信息</div>
+                    <div contenteditable="true" style="outline:none;padding:8px;border:1px dashed #ddd;border-radius:4px;">
+                        <p>门店：${data.storeName || '______'} | 区域：${data.region || '______'} | 月份：${data.month || '______'}</p>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">📊 损益总览</div>
+                    <table class="data-table" style="margin-bottom:12px;">
+                        <thead><tr><th>项目</th><th>实际</th><th>预算</th><th>差异</th></tr></thead>
+                        <tbody>
+                            <tr><td style="font-weight:600;">折前营业额</td><td>${formatMoney(data.revenueBeforeDiscount)}</td><td>${formatMoney(data.budgetRevenue)}</td><td class="${revenueGap >= 0 ? 'gap-positive' : 'gap-negative'}">${revenueGap >= 0 ? '+' : ''}${formatMoney(revenueGap)}</td></tr>
+                            <tr><td style="font-weight:600;">折后实收</td><td>${formatMoney(data.revenueAfterDiscount)}</td><td>-</td><td>-</td></tr>
+                            <tr><td style="font-weight:600;">折扣金额</td><td class="gap-negative">${formatMoney(data.discountAmount)}</td><td>-</td><td>-</td></tr>
+                            <tr><td style="font-weight:600;">营业成本</td><td>${formatMoney(data.costOfGoods)}</td><td>-</td><td>-</td></tr>
+                            <tr><td style="font-weight:600;">毛利额</td><td>${formatMoney(data.grossProfit)}</td><td>-</td><td>-</td></tr>
+                            <tr class="cell-highlight"><td style="font-weight:600;">折前毛利率</td><td><strong>${data.grossMarginBefore}%</strong></td><td>-</td><td>-</td></tr>
+                            <tr class="cell-highlight"><td style="font-weight:600;">折后毛利率</td><td class="${grossMarginGap >= 0 ? 'gap-positive' : 'gap-negative'}"><strong>${data.grossMarginAfter}%</strong></td><td><strong>${data.budgetGrossMargin}%</strong></td><td class="${grossMarginGap >= 0 ? 'gap-positive' : 'gap-negative'}">${grossMarginGap >= 0 ? '+' : ''}${grossMarginGap.toFixed(1)}%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">💰 费用结构</div>
+                    <table class="data-table" style="margin-bottom:12px;">
+                        <thead><tr><th>费用项目</th><th>金额</th><th>占营业额%</th></tr></thead>
+                        <tbody>
+                            <tr><td style="font-weight:600;">人工成本</td><td>${formatMoney(data.laborCost)}</td><td class="${data.laborCostPct > data.budgetLaborCostPct ? 'gap-negative' : ''}">${data.laborCostPct}%</td></tr>
+                            <tr><td style="font-weight:600;">水电费</td><td>${formatMoney(data.utilities)}</td><td>${data.utilitiesPct}%</td></tr>
+                            <tr><td style="font-weight:600;">低值易耗品</td><td>${formatMoney(data.lowValueConsumables)}</td><td>${data.lowValueConsumablesPct}%</td></tr>
+                            <tr><td style="font-weight:600;">维修费</td><td>${formatMoney(data.repairCost)}</td><td>${data.repairCostPct}%</td></tr>
+                            <tr><td style="font-weight:600;">宣传费</td><td>${formatMoney(data.advertising)}</td><td>${data.advertisingPct}%</td></tr>
+                            <tr><td style="font-weight:600;">办公费</td><td>${formatMoney(data.officeExpense)}</td><td>${data.officeExpensePct}%</td></tr>
+                            <tr><td style="font-weight:600;">配送运费</td><td>${formatMoney(data.deliveryFee)}</td><td>${data.deliveryFeePct}%</td></tr>
+                            <tr><td style="font-weight:600;">租金</td><td>${formatMoney(data.rent)}</td><td>${data.rentPct}%</td></tr>
+                            <tr><td style="font-weight:600;">品牌管理费</td><td>${formatMoney(data.brandFee)}</td><td>${data.brandFeePct}%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">📈 利润结构</div>
+                    <table class="data-table" style="margin-bottom:12px;">
+                        <thead><tr><th>项目</th><th>实际</th><th>预算</th><th>差异</th></tr></thead>
+                        <tbody>
+                            <tr><td style="font-weight:600;">可控利润</td><td>${formatMoney(data.controllableProfit)}</td><td>-</td><td>-</td></tr>
+                            <tr class="cell-highlight"><td style="font-weight:600;">净利润</td><td class="${netProfitGap >= 0 ? 'gap-positive' : 'gap-negative'}"><strong>${formatMoney(data.netProfit)}</strong></td><td><strong>${formatMoney(data.budgetNetProfit)}</strong></td><td class="${netProfitGap >= 0 ? 'gap-positive' : 'gap-negative'}">${netProfitGap >= 0 ? '+' : ''}${formatMoney(netProfitGap)}</td></tr>
+                            <tr class="cell-highlight"><td style="font-weight:600;">净利率</td><td class="${netProfitMarginGap >= 0 ? 'gap-positive' : 'gap-negative'}"><strong>${data.netProfitMargin}%</strong></td><td><strong>${data.budgetNetProfitMargin}%</strong></td><td class="${netProfitMarginGap >= 0 ? 'gap-positive' : 'gap-negative'}">${netProfitMarginGap >= 0 ? '+' : ''}${netProfitMarginGap.toFixed(1)}%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">🎯 核心差距</div>
+                    <div contenteditable="true" style="outline:none;padding:8px;border:1px dashed #ddd;border-radius:4px;">
+                        <p>${gapDesc}</p>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">🔍 诊断类型</div>
+                    <div contenteditable="true" style="outline:none;padding:8px;border:1px dashed #ddd;border-radius:4px;">
+                        <p>${diagnosisHtml}</p>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">🔍 利润差距根源</div>
+                    <div contenteditable="true" style="outline:none;padding:8px;border:1px dashed #ddd;border-radius:4px;">
+                        <p>${rootCausesHtml}</p>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">📋 降本增效方案</div>
+                    <div contenteditable="true" style="outline:none;padding:8px;border:1px dashed #ddd;border-radius:4px;">
+                        ${actionsHtml}
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">🎯 下月目标</div>
+                    <table class="data-table" style="margin-bottom:12px;">
+                        <thead><tr><th style="text-align:left;">目标项</th><th>目标值</th></tr></thead>
+                        <tbody>${targetHtml}</tbody>
+                    </table>
+                </div>
+            `;
+
+            document.getElementById('previewSection').classList.add('active');
+            document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+
+            // 保存数据到URL
+            saveDataToUrl();
+        }
+
+        // ========== 保存数据到URL ==========
+        function saveDataToUrl() {
+            const data = window.__AI_DATA__;
+            if (!data) return;
+
+            const formData = {
+                baseData: data,
+                diagnosis: selectedDiagnosis,
+                rootCauses: Array.from(document.querySelectorAll('.root-cause-option.selected')).map(el => {
+                    const textEl = el.querySelector('.editable-text');
+                    return textEl ? textEl.textContent.trim() : '';
+                }).filter(Boolean),
+                actions: Array.from(document.querySelectorAll('.action-plan-item')).map(item => ({
+                    desc: item.querySelector('.action-desc')?.value || '',
+                    owner: item.querySelector('.action-owner')?.value || '',
+                    deadline: item.querySelector('.action-deadline')?.value || '',
+                    metric: item.querySelector('.action-metric')?.value || '',
+                    target: item.querySelector('.action-target')?.value || ''
+                })),
+                targets: Array.from(document.querySelectorAll('#targetContainer .form-group')).map(group => {
+                    const labelInput = group.querySelector('.target-label-input');
+                    const label = labelInput ? labelInput.value : group.querySelector('label')?.textContent || '';
+                    const input = group.querySelector('.target-input');
+                    return { label, value: input ? input.value : '' };
+                }).filter(t => t.value)
+            };
+
+            const jsonStr = JSON.stringify(formData);
+            const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+            const newUrl = window.location.href.split('#')[0] + '#data=' + encoded;
+            window.location.href = newUrl;
+        }
+
+        // ========== 页面加载时尝试恢复数据 ==========
+        function loadDataFromUrl() {
+            const hash = window.location.hash;
+            if (hash && hash.startsWith('#data=')) {
+                try {
+                    const encoded = hash.slice(6);
+                    const jsonStr = decodeURIComponent(escape(atob(encoded)));
+                    const savedData = JSON.parse(jsonStr);
+                    
+                    // 恢复诊断类型
+                    if (savedData.diagnosis) {
+                        document.querySelectorAll('.diagnosis-option').forEach(opt => {
+                            if (opt.textContent === savedData.diagnosis) {
+                                opt.classList.add('selected');
+                                selectedDiagnosis = savedData.diagnosis;
+                            }
+                        });
+                    }
+                    
+                    // 恢复根源（需要匹配文本，简化处理）
+                    // 恢复行动计划
+                    if (savedData.actions && savedData.actions.length > 0) {
+                        document.getElementById('actionPlanContainer').innerHTML = '';
+                        actionItemCount = 0;
+                        savedData.actions.forEach(action => {
+                            actionItemCount++;
+                            const container = document.getElementById('actionPlanContainer');
+                            const div = document.createElement('div');
+                            div.className = 'action-plan-item';
+                            div.innerHTML = `
+                                <div class="action-plan-header">
+                                    <span class="action-plan-title">行动${actionItemCount}</span>
+                                    <button class="btn btn-secondary" style="padding:4px 12px;font-size:12px;" onclick="this.closest('.action-plan-item').remove()">删除</button>
+                                </div>
+                                <div class="action-plan-body">
+                                    <div class="form-group"><label>具体行动</label><input type="text" class="action-desc" value="${action.desc || ''}"></div>
+                                    <div class="form-group"><label>负责人</label><input type="text" class="action-owner" value="${action.owner || ''}"></div>
+                                    <div class="form-group"><label>完成时间</label><input type="text" class="action-deadline" value="${action.deadline || ''}"></div>
+                                    <div class="form-group"><label>衡量标准</label><input type="text" class="action-metric" value="${action.metric || ''}"></div>
+                                    <div class="form-group"><label>目标结果</label><input type="text" class="action-target" value="${action.target || ''}"></div>
+                                </div>
+                            `;
+                            container.appendChild(div);
+                        });
+                    }
+                    
+                    // 恢复目标
+                    if (savedData.targets && savedData.targets.length > 0) {
+                        // 清空默认目标，重新添加
+                        document.getElementById('targetContainer').innerHTML = '';
+                        savedData.targets.forEach(t => {
+                            addTarget(t.label, t.value);
+                        });
+                    }
+                    
+                    console.log('✅ 从URL恢复数据成功');
+                } catch (e) {
+                    console.error('从URL恢复数据失败:', e);
+                }
+            }
+        }
+
+        // ========== 报告操作 ==========
+        function copyReport() {
+            const content = document.getElementById('previewContent').innerText;
+            navigator.clipboard.writeText(content).then(() => alert('报告内容已复制到剪贴板'));
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        function screenshotReport() {
+            const element = document.getElementById('previewContent');
+            html2canvas(element, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = '损益分析报告.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            });
+        }
+
+        function syncToDingTalk() {
+            saveDataToUrl();
+            const currentUrl = window.location.href;
+            navigator.clipboard.writeText(currentUrl).then(() => {
+                alert('✅ 链接已复制！\n\n请将复制的链接粘贴发送给【满分学院AI助教】，即可自动同步到钉钉表格。');
+            });
+        }
+
+        // ========== 初始化 ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            initData();
+            loadDataFromUrl();
+        });
+
+        // 全局数据占位符（会被替换为实际数据）
+        window.__AI_DATA__ = {"storeName":"小北店","region":"孙红梅区","month":"2026-04","revenueBeforeDiscount":390631,"revenueAfterDiscount":384890,"discountAmount":5741,"costOfGoods":181375,"grossProfit":183515,"grossMarginBefore":53.84,"grossMarginAfter":50.29,"laborCost":64783,"laborCostPct":16.83,"utilities":14757,"utilitiesPct":3.83,"lowValueConsumables":2109,"lowValueConsumablesPct":0.55,"repairCost":2804,"repairCostPct":0.73,"advertising":0,"advertisingPct":0,"officeExpense":1040,"officeExpensePct":0.27,"deliveryFee":5025,"deliveryFeePct":1.31,"rent":7800,"rentPct":2.03,"brandFee":2617,"brandFeePct":0.68,"otherUncontrollable":63822,"otherUncontrollablePct":16.58,"controllableProfit":73082,"controllableProfitPct":18.99,"netProfit":-6376,"netProfitMargin":-1.66,"budgetRevenue":407094,"budgetGrossMargin":52.58,"budgetLaborCostPct":17,"budgetNetProfit":-8067,"budgetNetProfitMargin":-1.98,"categories":[{"name":"现烤","amount":132188,"pct":34.34},{"name":"包装","amount":80728,"pct":20.97},{"name":"热酥","amount":40434,"pct":10.51},{"name":"蛋糕","amount":39052,"pct":10.15},{"name":"甜品","amount":44169,"pct":11.48},{"name":"贸易","amount":48319,"pct":12.55}]};
+    </script>
+</body>
+</html>
